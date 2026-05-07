@@ -1,0 +1,32 @@
+{
+  "name": "@finwise/server",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "bundle": "node scripts/bundle.mjs",
+    "bundle:sidecar": "pnpm bundle && node scripts/copy-sidecar.mjs",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@finwise/shared": "workspace:*",
+    "@hono/node-server": "latest",
+    "@hono/zod-validator": "latest",
+    "csv-parse": "latest",
+    "drizzle-orm": "latest",
+    "hono": "latest",
+    "nanoid": "latest",
+    "node-cron": "latest",
+    "postgres": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "esbuild": "latest",
+    "drizzle-kit": "latest",
+    "tsx": "latest",
+    "typescript": "latest",
+    "vitest": "latest"
+  }
+}

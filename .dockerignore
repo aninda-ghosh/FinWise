@@ -1,0 +1,10 @@
+node_modules
+**/node_modules
+**/dist
+**/.next
+apps/desktop/src-tauri
+apps/server/finwise.db
+.env
+*.db
+extras
+docs
