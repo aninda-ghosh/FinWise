@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { Bot, ChevronDown, Loader2, Play, RotateCcw, Send, Sparkles, User, WifiOff } from "lucide-react";
 import { useAppStore } from "@/stores/app.store";
