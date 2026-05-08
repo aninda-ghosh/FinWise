@@ -5,6 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.7.1-beta] — 2026-05-08
+
+### Added
+
+- **Auto-heal sidecar.** Added `willfarrell/autoheal` as a Docker Compose service. It monitors all containers with health checks every 30 s and automatically restarts any that enter the `unhealthy` state — covering scenarios that `restart: unless-stopped` misses (a stuck-but-running container that never exits).
+
+### Fixed
+
+- **AI Chat SSE stream cut off (`ERR_INCOMPLETE_CHUNKED_ENCODING`).** Nginx was buffering the `/api/ai/chat` SSE response, causing the browser to receive an incomplete chunked stream. Added a dedicated `location /api/ai/chat` block with `proxy_buffering off` and `proxy_cache off` so tokens are forwarded to the browser immediately as they arrive from the server. Proxy timeouts also increased to 300 s to accommodate long model responses.
+- **Ollama container healthcheck.** Replaced `curl http://localhost:11434` with `ollama list` — the former only checked that the HTTP port was open, not that the model runtime was ready. The new check also uses a longer `start_period` (30 s) and more retries (15) to handle slow first-start model initialization.
+
+---
+
 ## [0.7.0-beta] — 2026-05-08
 
 ### Added

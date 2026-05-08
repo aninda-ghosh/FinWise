@@ -13,6 +13,25 @@ import { apiFetch, BASE_URL, getToken } from "@/lib/api";
 
 const CHANGELOG: { version: string; date: string; sections: { label: string; items: string[] }[] }[] = [
   {
+    version: "0.7.1-beta",
+    date: "2026-05-08",
+    sections: [
+      {
+        label: "Added",
+        items: [
+          "Auto-heal sidecar — willfarrell/autoheal monitors all containers every 30 s and restarts any that become unhealthy, covering cases that restart: unless-stopped misses.",
+        ],
+      },
+      {
+        label: "Fixed",
+        items: [
+          "AI Chat SSE stream cut off (ERR_INCOMPLETE_CHUNKED_ENCODING) — Nginx now forwards tokens to the browser immediately with proxy_buffering off on the /api/ai/chat route.",
+          "Ollama healthcheck now uses 'ollama list' instead of a raw HTTP check, with a longer start period to handle slow first-start initialization.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.7.0-beta",
     date: "2026-05-08",
     sections: [
