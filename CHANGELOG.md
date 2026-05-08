@@ -5,10 +5,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.7.2-beta] — 2026-05-08
+
+### Added
+
+- **PWA support.** Added `manifest.json` and iOS-specific meta tags (`apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`, `apple-touch-icon`). The app can now be installed from Safari via "Add to Home Screen" and runs in standalone mode — all navigation stays inside the app shell instead of breaking out to Safari.
+
+### Fixed
+
+- **JWT token not persisting across page refreshes.** The `unlocked` state was initialized to `false` on every load, showing the login screen even when a valid token was already in `localStorage`. It now reads the token on startup and skips the login screen if one is present.
+- **Expired token leaves app in broken state.** Any 401 response from the API now clears the stored token and reloads the page, sending the user back to the login screen cleanly.
+- **Smaller UI on mobile.** Root font size reduced to 14 px on viewports below 768 px (up from 16 px). All `rem`-based sizes — text, padding, spacing — scale down proportionally on mobile without touching individual components.
+
+---
+
 ## [0.7.1-beta] — 2026-05-08
 
 ### Added
 
+- **PWA support.** Added `manifest.json` and iOS-specific meta tags (`apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`, `apple-touch-icon`). The app can now be installed from Safari via "Add to Home Screen" and runs in standalone mode — all navigation stays inside the app shell instead of breaking out to Safari.
 - **Auto-heal sidecar.** Added `willfarrell/autoheal` as a Docker Compose service. It monitors all containers with health checks every 30 s and automatically restarts any that enter the `unhealthy` state — covering scenarios that `restart: unless-stopped` misses (a stuck-but-running container that never exits).
 
 ### Fixed

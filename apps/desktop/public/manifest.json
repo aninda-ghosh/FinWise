@@ -1,0 +1,18 @@
+{
+  "name": "Finwise",
+  "short_name": "Finwise",
+  "description": "Self-hosted personal finance manager",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "icons": [
+    {
+      "src": "/Finwise-Dark.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

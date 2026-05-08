@@ -22,8 +22,11 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   if (token) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch(`${BASE_URL}${path}`, { ...init, headers });
   if (!res.ok) {
+    if (res.status === 401) {
+      clearToken();
+      window.location.reload();
+    }
     const err = await res.json().catch(() => ({ error: "Unknown error" }));
-    // Include zod field details in the message when available
     if (err.details?.issues?.length) {
       const fields = err.details.issues.map((i: any) => `${i.path.join(".")}: ${i.message}`).join("; ");
       throw new Error(`${err.error ?? "Request failed"} — ${fields}`);

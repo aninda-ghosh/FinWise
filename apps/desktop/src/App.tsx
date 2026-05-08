@@ -7,6 +7,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { LoginGate } from "@/components/LoginGate";
 
 import { queryClient } from "@/lib/query-client";
+import { getToken } from "@/lib/api";
 import { useResolvedTheme } from "@/hooks/useResolvedTheme";
 import "./App.css";
 
@@ -44,7 +45,7 @@ function ThemeSync() {
 }
 
 export default function App() {
-  const [unlocked, setUnlocked] = useState(false);
+  const [unlocked, setUnlocked] = useState(() => !!getToken());
 
   if (!unlocked) {
     return (

@@ -13,6 +13,26 @@ import { apiFetch, BASE_URL, getToken } from "@/lib/api";
 
 const CHANGELOG: { version: string; date: string; sections: { label: string; items: string[] }[] }[] = [
   {
+    version: "0.7.2-beta",
+    date: "2026-05-08",
+    sections: [
+      {
+        label: "Added",
+        items: [
+          "PWA support — install from Safari via 'Add to Home Screen'. Runs in standalone mode; all navigation stays inside the app shell instead of breaking out to Safari.",
+        ],
+      },
+      {
+        label: "Fixed",
+        items: [
+          "JWT token not persisting across page refreshes — login screen no longer appears after a refresh when a valid token is already stored.",
+          "Expired token now cleanly logs you out instead of leaving the app in a broken state.",
+          "Smaller UI on mobile — root font size reduced to 14 px on small screens so all text and spacing scales down proportionally.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.7.1-beta",
     date: "2026-05-08",
     sections: [
