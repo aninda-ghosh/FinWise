@@ -28,8 +28,19 @@ function labelFrequency(f: string) {
   return f === "annual" ? "annually" : f === "quarterly" ? "quarterly" : "monthly";
 }
 
+const CURRENCY_LOCALE: Record<string, string> = {
+  INR: "en-IN",
+  USD: "en-US",
+  NTD: "zh-TW",
+  TWD: "zh-TW",
+  GBP: "en-GB",
+  EUR: "en-IE",
+  SGD: "en-SG",
+  JPY: "ja-JP",
+};
+
 function fmt(n: number, currency = "INR") {
-  const locale = currency === "INR" ? "en-IN" : "en-US";
+  const locale = CURRENCY_LOCALE[currency] ?? "en-US";
   return new Intl.NumberFormat(locale, { style: "currency", currency, maximumFractionDigits: 0 }).format(n);
 }
 

@@ -11,7 +11,7 @@ export type InvestmentResponse = {
   id: string;
   name: string;
   asset_type: "mutual_fund" | "fd" | "savings" | "bond" | "real_estate" | "cash" | "structured" | "other";
-  currency: "INR" | "USD" | "SGD" | "GBP" | "EUR" | "AUD" | "JPY" | "TWD" | "HKD" | "CAD" | "NTD";
+  currency: "INR" | "USD" | "SGD" | "GBP" | "EUR" | "JPY" | "NTD";
   purchase_value: number;
   purchase_value_inr: number;
   units: number | null;

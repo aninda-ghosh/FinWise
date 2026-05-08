@@ -30,8 +30,8 @@ const FAQ_SECTIONS: FAQSection[] = [
         q: "What currencies are supported?",
         a: (
           <span>
-            Accounts, investments, and envelopes all support the same 11 currencies:{" "}
-            <strong>INR, USD, SGD, GBP, EUR, AUD, JPY, TWD, HKD, CAD, and NTD</strong>.
+            Accounts, investments, and envelopes all support the same 7 currencies:{" "}
+            <strong>INR, USD, SGD, GBP, EUR, JPY, and NTD</strong>.
             Debt accounts are currently limited to INR, USD, SGD, and NTD.
             Exchange rates are fetched automatically every 15 minutes from open.er-api.com
             and everything is converted to your chosen default display currency.

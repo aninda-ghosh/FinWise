@@ -1,7 +1,6 @@
 export function getFinancialAdvisorPrompt(displayCurrency: string): string {
   const currencySymbol: Record<string, string> = {
-    INR: "₹", USD: "$", SGD: "S$", GBP: "£", EUR: "€",
-    AUD: "A$", JPY: "¥", TWD: "NT$", HKD: "HK$", CAD: "CA$", NTD: "NT$",
+    INR: "₹", USD: "$", SGD: "S$", GBP: "£", EUR: "€", JPY: "¥", NTD: "NT$",
   };
   const symbol = currencySymbol[displayCurrency] ?? displayCurrency;
 

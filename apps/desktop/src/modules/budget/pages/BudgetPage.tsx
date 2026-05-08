@@ -101,7 +101,7 @@ function AccountDialog({
           <div>
             <Label>Currency</Label>
             <select value={currency} onChange={e => setCurrency(e.target.value)} className="w-full border rounded-md px-3 py-2 text-sm mt-1 bg-background">
-              {["INR", "USD", "EUR", "GBP", "SGD", "AUD", "JPY", "TWD"].map(c => <option key={c} value={c}>{c}</option>)}
+              {["INR", "USD", "SGD", "GBP", "EUR", "JPY", "NTD"].map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div><Label>Balance</Label><Input type="number" value={balance} onChange={e => setBalance(e.target.value)} className="mt-1" /></div>
@@ -614,7 +614,7 @@ function EnvelopeFormDialog({
             <div>
               <Label>Currency</Label>
               <select value={budgetCurrency} onChange={e => setBudgetCurrency(e.target.value)} className={sel}>
-                {["INR","USD","SGD","GBP","EUR","AUD","JPY","TWD","HKD","CAD","NTD"].map(c => (
+                {["INR","USD","SGD","GBP","EUR","JPY","NTD"].map(c => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>

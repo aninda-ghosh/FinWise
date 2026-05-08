@@ -5,12 +5,8 @@ const localeMap: Record<Currency, { locale: string; opts: Intl.NumberFormatOptio
   USD: { locale: "en-US", opts: { style: "currency", currency: "USD", minimumFractionDigits: 2 } },
   SGD: { locale: "en-SG", opts: { style: "currency", currency: "SGD", minimumFractionDigits: 2 } },
   GBP: { locale: "en-GB", opts: { style: "currency", currency: "GBP", minimumFractionDigits: 2 } },
-  EUR: { locale: "de-DE", opts: { style: "currency", currency: "EUR", minimumFractionDigits: 2 } },
-  AUD: { locale: "en-AU", opts: { style: "currency", currency: "AUD", minimumFractionDigits: 2 } },
+  EUR: { locale: "en-IE", opts: { style: "currency", currency: "EUR", minimumFractionDigits: 2 } },
   JPY: { locale: "ja-JP", opts: { style: "currency", currency: "JPY", minimumFractionDigits: 0 } },
-  TWD: { locale: "zh-TW", opts: { style: "currency", currency: "TWD", minimumFractionDigits: 0 } },
-  HKD: { locale: "zh-HK", opts: { style: "currency", currency: "HKD", minimumFractionDigits: 2 } },
-  CAD: { locale: "en-CA", opts: { style: "currency", currency: "CAD", minimumFractionDigits: 2 } },
   NTD: { locale: "zh-TW", opts: { style: "currency", currency: "TWD", minimumFractionDigits: 0 } },
 };
 

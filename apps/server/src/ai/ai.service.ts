@@ -134,7 +134,7 @@ export class AIService {
       for (const tc of response.tool_calls) {
         let result: unknown;
         try {
-          result = await executeTool(tc.function.name, tc.function.arguments as Record<string, unknown>);
+          result = await executeTool(tc.function.name, tc.function.arguments as Record<string, unknown>, displayCurrency);
         } catch (e) {
           result = { error: String(e) };
         }

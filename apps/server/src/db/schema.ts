@@ -9,7 +9,7 @@ export const accounts = pgTable("accounts", {
   id: text("id").primaryKey().$defaultFn(() => nanoid()),
   name: text("name").notNull(),
   type: text("type").$type<"checking" | "savings" | "credit" | "investment" | "cash" | "loan">().notNull(),
-  currency: text("currency").$type<"INR" | "USD" | "SGD" | "GBP" | "EUR" | "AUD" | "JPY" | "TWD" | "HKD" | "CAD" | "NTD">().default("INR"),
+  currency: text("currency").$type<"INR" | "USD" | "SGD" | "GBP" | "EUR" | "JPY" | "NTD">().default("INR"),
   balance: doublePrecision("balance").default(0),
   institution: text("institution"),
   is_active: boolean("is_active").default(true),
@@ -36,7 +36,7 @@ export const envelopes = pgTable("envelopes", {
     .references(() => envelope_groups.id),
   name: text("name").notNull(),
   budgeted: doublePrecision("budgeted").default(0),
-  budget_currency: text("budget_currency").$type<"INR" | "USD" | "SGD" | "GBP" | "EUR" | "AUD" | "JPY" | "TWD" | "HKD" | "CAD" | "NTD">().default("INR"),
+  budget_currency: text("budget_currency").$type<"INR" | "USD" | "SGD" | "GBP" | "EUR" | "JPY" | "NTD">().default("INR"),
   spent: doublePrecision("spent").default(0),
   month: text("month").notNull(), // format: "YYYY-MM"
   rollover_type: text("rollover_type").$type<"none" | "amount" | "leftover">().default("none"),
@@ -68,7 +68,7 @@ export const investments = pgTable("investments", {
   id: text("id").primaryKey().$defaultFn(() => nanoid()),
   name: text("name").notNull(),
   asset_type: text("asset_type").$type<"mutual_fund" | "stock" | "etf" | "fd" | "savings" | "bond" | "real_estate" | "cash" | "structured" | "other">().notNull(),
-  currency: text("currency").$type<"INR" | "USD" | "SGD" | "GBP" | "EUR" | "AUD" | "JPY" | "TWD" | "HKD" | "CAD" | "NTD">().default("INR"),
+  currency: text("currency").$type<"INR" | "USD" | "SGD" | "GBP" | "EUR" | "JPY" | "NTD">().default("INR"),
   purchase_value: doublePrecision("purchase_value").notNull(),
   units: doublePrecision("units"), // nullable
   purchase_date: text("purchase_date").notNull(),

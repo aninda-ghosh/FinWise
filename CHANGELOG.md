@@ -5,6 +5,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.7.7-beta] — 2026-05-08
+
+### Changed
+
+- **Currency support trimmed to 7.** Removed AUD, CAD, HKD, and TWD. Supported currencies are now: **INR, USD, SGD, GBP, EUR, JPY, NTD**. Updated across the Zod schema, DB type annotations, all UI currency selectors (Settings, Budget, Investments), the AI prompt, and FAQ text.
+- **Correct locale per currency.** Each currency now uses its proper `Intl.NumberFormat` locale: `en-IN` (INR), `en-US` (USD), `en-SG` (SGD), `en-GB` (GBP), `en-IE` (EUR — western comma grouping), `ja-JP` (JPY), `zh-TW` (NTD). Applied consistently in the AI tool formatter, context builder, and the shared `currency.ts` utility.
+
+---
+
+## [0.7.6-beta] — 2026-05-08
+
+### Fixed
+
+- **AI mixing currency symbols and labels** (e.g. "$26,028,884 (in INR)"). Tool results were returned as raw JSON objects full of bare INR numbers; the model was left to format and convert them itself, which it did incorrectly. Tool outputs are now formatted server-side — every monetary amount is converted to the user's display currency and formatted with the correct locale before being sent to the model. The model receives plain text like `Net Worth: $26,028` and has nothing to reinterpret.
+
+---
+
 ## [0.7.5-beta] — 2026-05-08
 
 ### Changed

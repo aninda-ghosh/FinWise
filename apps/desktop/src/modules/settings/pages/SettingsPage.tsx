@@ -676,7 +676,7 @@ function DataResetCard() {
 }
 
 const SUPPORTED_CURRENCIES = [
-  "INR", "USD", "SGD", "GBP", "EUR", "AUD", "JPY", "TWD", "HKD", "CAD", "NTD",
+  "INR", "USD", "SGD", "GBP", "EUR", "JPY", "NTD",
 ] as const;
 
 export default function SettingsPage() {
