@@ -16,6 +16,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **JWT token not persisting across page refreshes.** The `unlocked` state was initialized to `false` on every load, showing the login screen even when a valid token was already in `localStorage`. It now reads the token on startup and skips the login screen if one is present.
 - **Expired token leaves app in broken state.** Any 401 response from the API now clears the stored token and reloads the page, sending the user back to the login screen cleanly.
 - **Smaller UI on mobile.** Root font size reduced to 14 px on viewports below 768 px (up from 16 px). All `rem`-based sizes — text, padding, spacing — scale down proportionally on mobile without touching individual components.
+- **PWA top overlap fixed.** Added `env(safe-area-inset-top)` padding to the root layout so app content starts below the Dynamic Island / status bar instead of rendering underneath it.
+- **PWA zoom prevented.** Added `maximum-scale=1.0` to the viewport meta tag so iOS no longer scales up content in standalone mode.
+- **Sidebar height corrected.** Sidebar now uses `h-full` instead of `h-[100dvh]` so it respects the top safe-area padding applied to its parent, preventing overflow.
 
 ---
 

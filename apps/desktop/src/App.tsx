@@ -61,7 +61,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeSync />
       <BrowserRouter>
-        <div className="flex h-[100dvh] bg-background text-foreground overflow-hidden">
+        <div className="flex h-[100dvh] bg-background text-foreground overflow-hidden pt-[env(safe-area-inset-top)]">
           <Sidebar />
           <main className="flex-1 overflow-y-auto pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0">
             <Suspense fallback={<PageLoader />}>

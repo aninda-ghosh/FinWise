@@ -28,6 +28,8 @@ const CHANGELOG: { version: string; date: string; sections: { label: string; ite
           "JWT token not persisting across page refreshes — login screen no longer appears after a refresh when a valid token is already stored.",
           "Expired token now cleanly logs you out instead of leaving the app in a broken state.",
           "Smaller UI on mobile — root font size reduced to 14 px on small screens so all text and spacing scales down proportionally.",
+          "PWA top overlap fixed — app content now starts below the Dynamic Island / status bar using env(safe-area-inset-top).",
+          "PWA zoom prevented — maximum-scale=1.0 stops iOS from scaling up content in standalone mode.",
         ],
       },
     ],
