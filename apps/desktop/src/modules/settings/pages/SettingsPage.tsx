@@ -785,7 +785,7 @@ export default function SettingsPage() {
             <ChangelogDialog />
           </div>
           <p>Personal finance manager. Your data is stored in PostgreSQL and stays within your own infrastructure.</p>
-          <p>AI powered by <span className="font-medium text-foreground">Ollama gemma4:e4b</span> running locally.</p>
+          <p>AI powered by <span className="font-medium text-foreground">Ollama gemma4:e2b</span> running locally.</p>
         </CardContent>
       </Card>
     </div>

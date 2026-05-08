@@ -69,7 +69,7 @@ function StreamingBubble({ text }: { text: string }) {
       </div>
       <div className="max-w-[78%] rounded-2xl rounded-tl-sm px-4 py-2.5 bg-muted text-foreground">
         {text
-          ? <MarkdownContent content={text} />
+          ? <p className="text-sm leading-relaxed whitespace-pre-wrap">{text}</p>
           : <span className="inline-flex gap-1 text-sm"><span className="animate-bounce" style={{ animationDelay: "0ms" }}>●</span><span className="animate-bounce" style={{ animationDelay: "150ms" }}>●</span><span className="animate-bounce" style={{ animationDelay: "300ms" }}>●</span></span>
         }
       </div>
@@ -87,7 +87,9 @@ export default function ChatPage() {
   const aiModel = useAppStore(s => s.aiModel);
   const setAiModel = useAppStore(s => s.setAiModel);
   const defaultCurrency = useAppStore(s => s.defaultCurrency);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isAtBottomRef = useRef(true);
   const abortRef = useRef<AbortController | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -118,9 +120,18 @@ export default function ChatPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aiModel]);
 
+  // Scroll to bottom only when user is already near the bottom (don't interrupt reading)
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, streamText]);
+    if (isAtBottomRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [streamText]);
+
+  // Always scroll when a new completed message lands (user just sent something)
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    isAtBottomRef.current = true;
+  }, [messages.length]);
 
   const sendMessage = () => {
     const text = input.trim();
@@ -244,7 +255,7 @@ export default function ChatPage() {
               <p className="text-sm font-medium text-amber-800 dark:text-amber-200">AI bot not available</p>
               <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
                 Ollama is not running. Install from <span className="font-mono">ollama.com</span>, then run:{" "}
-                <span className="font-mono font-medium">ollama pull gemma4:e4b</span>
+                <span className="font-mono font-medium">ollama pull gemma4:e2b</span>
               </p>
             </div>
           </div>
@@ -266,10 +277,10 @@ export default function ChatPage() {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-red-800 dark:text-red-200">Model not installed</p>
               <p className="text-xs text-red-700 dark:text-red-400 mt-0.5">
-                Ollama is running but <span className="font-mono font-medium">gemma4:e4b</span> is not installed. Run this in your terminal:
+                Ollama is running but <span className="font-mono font-medium">gemma4:e2b</span> is not installed. Run this in your terminal:
               </p>
               <code className="block mt-1.5 text-xs bg-red-100 dark:bg-red-900/50 rounded px-2 py-1 font-mono text-red-800 dark:text-red-200">
-                ollama pull gemma4:e4b
+                ollama pull gemma4:e2b
               </code>
               {availableModels.length > 0 && (
                 <p className="text-xs text-red-600 dark:text-red-400 mt-1.5">
@@ -282,7 +293,15 @@ export default function ChatPage() {
       )}
 
       {/* Messages */}
-      <ScrollArea className="flex-1 px-4 py-4">
+      <div
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto px-4 py-4"
+        onScroll={() => {
+          const el = scrollContainerRef.current;
+          if (!el) return;
+          isAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+        }}
+      >
         {messages.length === 0 && !streaming ? (
           <div className="flex flex-col items-center justify-center h-full gap-3 pt-20 text-center">
             <Sparkles className="w-10 h-10 text-muted-foreground/30" />
@@ -311,10 +330,10 @@ export default function ChatPage() {
           <div className="space-y-5 max-w-3xl mx-auto">
             {messages.map(m => <MessageBubble key={m.id} msg={m} />)}
             {streaming && <StreamingBubble text={streamText} />}
-            <div ref={scrollRef} />
+            <div ref={messagesEndRef} />
           </div>
         )}
-      </ScrollArea>
+      </div>
 
       {/* Input */}
       <div className="border-t px-4 py-3 flex-shrink-0">

@@ -5,6 +5,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.7.4-beta] — 2026-05-08
+
+### Changed
+
+- **AI model switched to `gemma4:e2b`.** Default Ollama model changed from `gemma4:e4b` to `gemma4:e2b` across the server config, client store, and all UI references. The e2b variant is smaller and faster while maintaining the same instruction-following quality for financial queries.
+
+### Fixed
+
+- **AI reporting garbage budget totals.** The model was receiving individual envelope amounts with no pre-computed total and attempting to add them itself, producing a stream of raw arithmetic instead of a summary. The financial context now includes a `SUMMARY` line with pre-computed total budgeted, total spent, and total remaining before the per-envelope detail rows — the model reads the answer directly instead of calculating it.
+- **AI formatting non-INR amounts with Indian number grouping.** `Intl.NumberFormat` was using the `en-IN` locale for all currencies, formatting `$275,867` as `$2,75,867`. The formatter now selects `en-IN` for INR and `en-US` for all other currencies so commas appear in the correct positions.
+- **Chat streaming text rendering glitches.** Incomplete markdown syntax during token streaming (e.g. a half-written `**bold**` or fenced code block) caused the rendered output to flicker and reformat unpredictably as tokens arrived. Streaming text now renders as plain `whitespace-pre-wrap` text; ReactMarkdown is only applied to completed messages already saved to the database.
+- **Chat auto-scrolling interrupting reading.** The message list was scrolling to the bottom on every streaming token, jumping the user away from content they were reading above. Scroll-on-token now only fires when the user is already within 80 px of the bottom. Scrolling to the bottom on a newly completed message is unconditional (the user just sent something).
+
+---
+
 ## [0.7.3-beta] — 2026-05-08
 
 ### Added

@@ -29,7 +29,8 @@ function labelFrequency(f: string) {
 }
 
 function fmt(n: number, currency = "INR") {
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 }).format(n);
+  const locale = currency === "INR" ? "en-IN" : "en-US";
+  return new Intl.NumberFormat(locale, { style: "currency", currency, maximumFractionDigits: 0 }).format(n);
 }
 
 // Convert an INR amount to display currency
@@ -102,10 +103,18 @@ export async function buildSystemContext(displayCurrency = "INR"): Promise<strin
     })),
     "",
     `## Budget for ${currentMonth}`,
-    ...(envelopes.length === 0 ? ["  No envelopes set up."] : envelopes.map(e =>
-      `  ${e.name}${e.group_name ? ` (${e.group_name})` : ""}: ` +
-      `budgeted ${fmtDisplay(e.budgeted_inr)}, spent ${fmtDisplay(e.spent)}, available ${fmtDisplay(e.available)}`
-    )),
+    ...(envelopes.length === 0 ? ["  No envelopes set up."] : (() => {
+      const totalBudgeted = envelopes.reduce((s, e) => s + e.budgeted_inr, 0);
+      const totalSpent = envelopes.reduce((s, e) => s + e.spent, 0);
+      const totalAvailable = envelopes.reduce((s, e) => s + e.available, 0);
+      return [
+        `  SUMMARY: Total budgeted ${fmtDisplay(totalBudgeted)}, total spent ${fmtDisplay(totalSpent)}, total remaining ${fmtDisplay(totalAvailable)}`,
+        ...envelopes.map(e =>
+          `  ${e.name}${e.group_name ? ` (${e.group_name})` : ""}: ` +
+          `budgeted ${fmtDisplay(e.budgeted_inr)}, spent ${fmtDisplay(e.spent)}, available ${fmtDisplay(e.available)}`
+        ),
+      ];
+    })()),
     "",
     `## Investments`,
     ...(investments.length === 0 ? ["  No investments tracked."] : investments.map(i => {

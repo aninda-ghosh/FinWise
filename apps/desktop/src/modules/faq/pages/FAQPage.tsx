@@ -197,7 +197,7 @@ const FAQ_SECTIONS: FAQSection[] = [
     items: [
       {
         q: "What AI model does the chat use?",
-        a: "Finwise uses Ollama to run a local language model on your machine. Your financial data and questions never leave your device. The default model is gemma4:e4b, but you can switch to any model you have pulled in Ollama from the model selector in the chat header.",
+        a: "Finwise uses Ollama to run a local language model on your machine. Your financial data and questions never leave your device. The default model is gemma4:e2b, but you can switch to any model you have pulled in Ollama from the model selector in the chat header.",
       },
       {
         q: "What can the AI advisor help with?",
@@ -215,7 +215,7 @@ const FAQ_SECTIONS: FAQSection[] = [
             click <strong>Start Ollama</strong>. Make sure Ollama is installed on your
             machine (<code className="bg-muted px-1 rounded text-xs">ollama.com</code>)
             and that you have pulled at least one model
-            (e.g. <code className="bg-muted px-1 rounded text-xs">ollama pull gemma4:e4b</code>).
+            (e.g. <code className="bg-muted px-1 rounded text-xs">ollama pull gemma4:e2b</code>).
             You can also verify the backend is running under <strong>Settings → API Server</strong>.
           </span>
         ),

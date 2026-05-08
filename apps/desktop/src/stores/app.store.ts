@@ -23,7 +23,7 @@ export const useAppStore = create<AppState>()(
       sidebarCollapsed: false,
       theme: "system",
       defaultCurrency: "USD",
-      aiModel: "gemma4:e4b",
+      aiModel: "gemma4:e2b",
       setSelectedMonth: (month) => set({ selectedMonth: month }),
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
       setTheme: (theme) => set({ theme }),
