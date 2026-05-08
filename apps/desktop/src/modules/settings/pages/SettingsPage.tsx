@@ -10,8 +10,30 @@ import { AlertTriangle, CheckCircle2, Download, RefreshCw, Server, Upload, XCirc
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { apiFetch, BASE_URL, getToken } from "@/lib/api";
+import { chatApi } from "@/modules/chat/api";
 
 const CHANGELOG: { version: string; date: string; sections: { label: string; items: string[] }[] }[] = [
+  {
+    version: "0.7.3-beta",
+    date: "2026-05-08",
+    sections: [
+      {
+        label: "Added",
+        items: [
+          "AI chat auto-clears when display currency is changed in Settings — prevents old responses in the previous currency from confusing the model.",
+        ],
+      },
+      {
+        label: "Fixed",
+        items: [
+          "AI chat currency accuracy — transaction amounts now show with currency symbol, envelope budgeted value was using wrong currency field, and the system prompt no longer hardcodes ₹ regardless of your display currency setting.",
+          "AI currency directive is now the first line the model reads, making it impossible to ignore on small models.",
+          "PWA top overlap (Dynamic Island) — replaced Tailwind arbitrary env() value with an inline style that iOS Safari actually applies.",
+          "PWA input zoom — inputs now have font-size: max(16px, 1em) so iOS never auto-zooms the viewport when tapping a field.",
+        ],
+      },
+    ],
+  },
   {
     version: "0.7.2-beta",
     date: "2026-05-08",
@@ -721,7 +743,12 @@ export default function SettingsPage() {
             {SUPPORTED_CURRENCIES.map(c => (
               <button
                 key={c}
-                onClick={() => setDefaultCurrency(c)}
+                onClick={() => {
+                  if (c === defaultCurrency) return;
+                  setDefaultCurrency(c);
+                  chatApi.clearChat().catch(() => {});
+                  toast.info(`Currency changed to ${c}. AI chat history cleared.`);
+                }}
                 className={`px-3 py-1.5 rounded-md border text-sm font-medium transition-colors ${defaultCurrency === c ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300" : "border-border hover:bg-muted"}`}
               >
                 {c}

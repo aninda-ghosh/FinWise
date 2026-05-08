@@ -5,7 +5,7 @@ import { ai_conversations, ai_messages, ai_tool_calls } from "../db/schema";
 import { appendExchange, deleteMemory } from "./chat-memory";
 import { buildSystemContext } from "./context.builder";
 import { OllamaClient, type OllamaMessage } from "./ollama.client";
-import { FINANCIAL_ADVISOR_PROMPT } from "./prompts/financial-advisor";
+import { getFinancialAdvisorPrompt } from "./prompts/financial-advisor";
 
 export type AIResponse = {
   id: string;
@@ -120,7 +120,7 @@ export class AIService {
 
     const systemMessage: OllamaMessage = {
       role: "system",
-      content: `${FINANCIAL_ADVISOR_PROMPT}\n\n${context}`,
+      content: `${getFinancialAdvisorPrompt(displayCurrency)}\n\n${context}`,
     };
 
     return [systemMessage, ...history, { role: "user", content: userMessage }];

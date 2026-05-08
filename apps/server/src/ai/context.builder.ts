@@ -76,10 +76,11 @@ export async function buildSystemContext(displayCurrency = "INR"): Promise<strin
     .limit(15);
 
   const accountNameById = Object.fromEntries(accounts_.map(a => [a.id, `${a.name} (${a.currency})`]));
+  const accountCurrencyById = Object.fromEntries(accounts_.map(a => [a.id, a.currency as string]));
 
   const lines: string[] = [
     `=== YOUR FINANCIAL SNAPSHOT — ${today} ===`,
-    `(All amounts shown in ${displayCurrency}${displayCurrency !== "INR" ? " with INR in parentheses" : ""})`,
+    `CURRENCY: All amounts below are in ${displayCurrency}${displayCurrency !== "INR" ? ". INR equivalents are shown in parentheses for reference only — always respond in " + displayCurrency : ""}. Do not convert or restate amounts in any other currency unless asked.`,
     "",
     `## Net Worth`,
     `Total net worth: ${fmtDisplay(netWorth.total_inr)}`,
@@ -103,7 +104,7 @@ export async function buildSystemContext(displayCurrency = "INR"): Promise<strin
     `## Budget for ${currentMonth}`,
     ...(envelopes.length === 0 ? ["  No envelopes set up."] : envelopes.map(e =>
       `  ${e.name}${e.group_name ? ` (${e.group_name})` : ""}: ` +
-      `budgeted ${fmtDisplay(e.budgeted)}, spent ${fmtDisplay(e.spent)}, available ${fmtDisplay(e.available)}`
+      `budgeted ${fmtDisplay(e.budgeted_inr)}, spent ${fmtDisplay(e.spent)}, available ${fmtDisplay(e.available)}`
     )),
     "",
     `## Investments`,
@@ -125,9 +126,14 @@ export async function buildSystemContext(displayCurrency = "INR"): Promise<strin
     )),
     "",
     `## Recent Transactions (last 15)`,
-    ...(recentTxns.length === 0 ? ["  No transactions yet."] : recentTxns.map(t =>
-      `  ${t.date} | ${t.type} | ${accountNameById[t.account_id] ?? "Unknown"} | ${t.payee} | ${t.amount}${t.notes ? ` — ${t.notes}` : ""}`
-    )),
+    ...(recentTxns.length === 0 ? ["  No transactions yet."] : recentTxns.map(t => {
+      const txnCurrency = accountCurrencyById[t.account_id] ?? "INR";
+      const txnAmountNative = fmt(Math.abs(t.amount), txnCurrency);
+      const txnAmountDisplay = displayCurrency !== txnCurrency
+        ? ` (${fmtDisplay(Math.abs(t.amount) * (txnCurrency === "INR" ? 1 : (rates[txnCurrency] ?? 1)))})`
+        : "";
+      return `  ${t.date} | ${t.type} | ${accountNameById[t.account_id] ?? "Unknown"} | ${t.payee} | ${txnAmountNative}${txnAmountDisplay}${t.notes ? ` — ${t.notes}` : ""}`;
+    })),
     "",
     `=== END OF SNAPSHOT ===`,
   ];

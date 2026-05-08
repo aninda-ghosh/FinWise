@@ -5,6 +5,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.7.3-beta] — 2026-05-08
+
+### Added
+
+- **AI chat auto-clears on currency change.** Switching the display currency in Settings now immediately clears the AI conversation history. Old responses formatted in the previous currency would have confused the model context — clearing ensures every reply after a currency switch is consistent.
+
+### Fixed
+
+- **AI chat reporting wrong currency.** Three bugs in the financial context passed to the model:
+  - Transaction amounts were raw numbers with no currency label (e.g. `5000` instead of `₹5,000`) — the model could not tell which currency an amount was in.
+  - Envelope `budgeted` value was taken from the raw budget_currency field rather than the INR-normalised `budgeted_inr`, causing mismatched units when `spent` and `available` (both in INR) were compared alongside it.
+  - The system prompt hardcoded "Use ₹ for INR amounts" regardless of the user's display currency setting, conflicting with USD/SGD/etc. context data.
+- **AI currency directive now prominent.** The model's display currency is now stated as the very first line of the system prompt (`IMPORTANT: The user's display currency is …`) and repeated at the top of the financial data snapshot. Small models previously ignored the currency setting buried deep in context.
+- **PWA top overlap (Dynamic Island).** Replaced `pt-[env(safe-area-inset-top)]` Tailwind arbitrary value — which iOS Safari does not reliably resolve — with an inline `style={{ paddingTop: "env(safe-area-inset-top)" }}` that is guaranteed to apply at runtime.
+- **PWA input zoom.** iOS Safari auto-zooms whenever a focused input has `font-size < 16 px`. With the 14 px mobile root, all inputs were at ~12 px, triggering a viewport zoom and horizontal shift on every login field tap. Added `font-size: max(16px, 1em)` globally so inputs are never below the zoom threshold.
+
+---
+
 ## [0.7.2-beta] — 2026-05-08
 
 ### Added
