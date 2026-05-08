@@ -39,7 +39,10 @@ export class OllamaClient {
           model: this.model,
           messages,
           stream: false,
-          options: { temperature: options?.temperature ?? AI_CONFIG.temperature.conversational },
+          options: {
+            temperature: options?.temperature ?? AI_CONFIG.temperature.conversational,
+            num_ctx: AI_CONFIG.contextWindow,
+          },
           tools: options?.tools,
         }),
       });
@@ -60,18 +63,23 @@ export class OllamaClient {
 
   async chatWithTools(
     messages: OllamaMessage[],
-    options?: ChatOptions
+    options?: ChatOptions,
+    modelOverride?: string
   ): Promise<OllamaMessage> {
     let response: Response;
+    const model = modelOverride ?? this.model;
     try {
       response = await fetch(`${this.baseUrl}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: this.model,
+          model,
           messages,
           stream: false,
-          options: { temperature: options?.temperature ?? AI_CONFIG.temperature.analysis },
+          options: {
+            temperature: options?.temperature ?? AI_CONFIG.temperature.analysis,
+            num_ctx: AI_CONFIG.contextWindow,
+          },
           tools: options?.tools,
         }),
       });
@@ -98,7 +106,10 @@ export class OllamaClient {
           model,
           messages,
           stream: true,
-          options: { temperature: options?.temperature ?? AI_CONFIG.temperature.conversational },
+          options: {
+            temperature: options?.temperature ?? AI_CONFIG.temperature.conversational,
+            num_ctx: AI_CONFIG.contextWindow,
+          },
         }),
       });
     } catch {

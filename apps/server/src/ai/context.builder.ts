@@ -108,7 +108,7 @@ export async function buildSystemContext(displayCurrency = "INR"): Promise<strin
       const totalSpent = envelopes.reduce((s, e) => s + e.spent, 0);
       const totalAvailable = envelopes.reduce((s, e) => s + e.available, 0);
       return [
-        `  SUMMARY: Total budgeted ${fmtDisplay(totalBudgeted)}, total spent ${fmtDisplay(totalSpent)}, total remaining ${fmtDisplay(totalAvailable)}`,
+        `  >>> TOTALS: budgeted=${fmtDisplay(totalBudgeted)}, spent=${fmtDisplay(totalSpent)}, remaining=${fmtDisplay(totalAvailable)} <<<`,
         ...envelopes.map(e =>
           `  ${e.name}${e.group_name ? ` (${e.group_name})` : ""}: ` +
           `budgeted ${fmtDisplay(e.budgeted_inr)}, spent ${fmtDisplay(e.spent)}, available ${fmtDisplay(e.available)}`

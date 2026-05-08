@@ -6,6 +6,7 @@ export const AI_CONFIG = {
     conversational: 0.4,
   },
   maxTokens: 4096,
+  contextWindow: 16384,
   maxToolIterations: 5,
   // Single persistent conversation — no multi-thread
   singletonConvId: "__singleton__",

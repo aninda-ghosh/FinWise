@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.7.5-beta] — 2026-05-08
+
+### Changed
+
+- **AI chat now uses tool calling instead of pre-loaded context.** The model no longer receives a static dump of all financial data in the system prompt. Instead it is given tools it can call on demand — `get_net_worth`, `get_envelope_summary`, `get_monthly_summary`, `get_transactions`, `get_investment_summary`, `get_policy_timeline`, `get_exchange_rates`, `refresh_investment_price`, `refresh_exchange_rates`. For each message the model decides which tools it needs, fetches only that data, and then generates its answer. General knowledge questions (investment principles, tax strategy, etc.) are answered from the model's own training without any tool call.
+- **Ollama context window raised to 16 384 tokens** (`num_ctx`) on all chat and tool-calling requests. The previous default of 2 048 tokens caused the system prompt and financial snapshot to be silently truncated, which is why the model was saying amounts were "not explicitly stated."
+
+---
+
 ## [0.7.4-beta] — 2026-05-08
 
 ### Changed

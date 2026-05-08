@@ -3,9 +3,9 @@ import { AI_CONFIG } from "../config/ai.config";
 import { getDb } from "../db/index";
 import { ai_conversations, ai_messages, ai_tool_calls } from "../db/schema";
 import { appendExchange, deleteMemory } from "./chat-memory";
-import { buildSystemContext } from "./context.builder";
 import { OllamaClient, type OllamaMessage } from "./ollama.client";
 import { getFinancialAdvisorPrompt } from "./prompts/financial-advisor";
+import { AI_TOOLS, executeTool } from "./tools/index";
 
 export type AIResponse = {
   id: string;
@@ -106,50 +106,51 @@ export class AIService {
     };
   }
 
-  // ─── Build full message array for Ollama ───────────────────────────────────
-
-  private async buildMessages(
-    conversationId: string,
-    userMessage: string,
-    displayCurrency = "INR"
-  ): Promise<OllamaMessage[]> {
-    const [context, history] = await Promise.all([
-      buildSystemContext(displayCurrency),
-      this.loadHistory(conversationId),
-    ]);
-
-    const systemMessage: OllamaMessage = {
-      role: "system",
-      content: `${getFinancialAdvisorPrompt(displayCurrency)}\n\n${context}`,
-    };
-
-    return [systemMessage, ...history, { role: "user", content: userMessage }];
-  }
-
-  // ─── Public: streaming chat ────────────────────────────────────────────────
-  // No tool-calling loop — all financial data is pre-loaded in the system prompt.
-  // This ensures compatibility with small models like gemma3:4b.
+  // ─── Public: streaming chat with tool-calling loop ────────────────────────
 
   async *stream(conversationId: string, userMessage: string, model?: string, displayCurrency = "INR"): AsyncGenerator<string> {
     await this.ensureConversation(conversationId);
     await this.saveUserMessage(conversationId, userMessage);
 
-    const db = getDb();
-    const messages = await this.buildMessages(conversationId, userMessage, displayCurrency);
+    const history = await this.loadHistory(conversationId);
+    const systemMessage: OllamaMessage = {
+      role: "system",
+      content: getFinancialAdvisorPrompt(displayCurrency),
+    };
+    const messages: OllamaMessage[] = [systemMessage, ...history, { role: "user", content: userMessage }];
 
-    // Stream directly from Ollama
+    // Tool-calling loop: model fetches only the data it needs
+    for (let i = 0; i < AI_CONFIG.maxToolIterations; i++) {
+      const response = await this.client.chatWithTools(
+        messages,
+        { temperature: AI_CONFIG.temperature.analysis, tools: AI_TOOLS },
+        model,
+      );
+
+      if (!response.tool_calls || response.tool_calls.length === 0) break;
+
+      messages.push({ role: "assistant", content: response.content ?? "", tool_calls: response.tool_calls });
+
+      for (const tc of response.tool_calls) {
+        let result: unknown;
+        try {
+          result = await executeTool(tc.function.name, tc.function.arguments as Record<string, unknown>);
+        } catch (e) {
+          result = { error: String(e) };
+        }
+        messages.push({ role: "tool", content: JSON.stringify(result) });
+      }
+    }
+
+    // Stream final answer with all fetched tool data in context
+    const db = getDb();
     let fullContent = "";
-    for await (const token of this.client.stream(messages, undefined, model)) {
+    for await (const token of this.client.stream(messages, { temperature: AI_CONFIG.temperature.conversational }, model)) {
       fullContent += token;
       yield token;
     }
 
-    // Persist completed assistant message
-    await db
-      .insert(ai_messages)
-      .values({ conversation_id: conversationId, role: "assistant", content: fullContent });
-
-    // Persist exchange to memory file
+    await db.insert(ai_messages).values({ conversation_id: conversationId, role: "assistant", content: fullContent });
     await appendExchange(conversationId, userMessage, fullContent).catch(() => {});
   }
 
