@@ -87,16 +87,13 @@ git clone https://github.com/aninda-ghosh/FinWise.git
 cd FinWise
 ```
 
-Copy the example environment file and fill in your secrets:
+Generate your secrets and write them to `.env` in one step:
 
 ```bash
 cp .env.example .env
-```
 
-```bash
-# .env — required values
-JWT_SECRET=        # generate with: openssl rand -hex 32
-POSTGRES_PASSWORD= # choose a strong password
+echo "JWT_SECRET=$(openssl rand -hex 32)" >> .env
+echo "POSTGRES_PASSWORD=$(openssl rand -base64 24)" >> .env
 ```
 
 Start all services:
