@@ -50,7 +50,10 @@ export const chatApi = {
             if (line.startsWith("event:")) {
               eventName = line.slice(6).trim();
             } else if (line.startsWith("data:")) {
-              const data = line.slice(5).trim();
+              // SSE spec: strip exactly one leading space, not all whitespace.
+              // Trimming collapses space-only tokens (spaces between words) to "".
+              const raw = line.slice(5);
+              const data = raw.startsWith(" ") ? raw.slice(1) : raw;
               if (eventName === "token") {
                 callbacks.onToken(data);
               } else if (eventName === "done") {

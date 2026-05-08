@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.7.8-beta] — 2026-05-08
+
+### Fixed
+
+- **AI chat streaming: words concatenated with no spaces.** The SSE data parser used `.trim()` on the `data:` field value. The SSE spec says to strip exactly one leading space (the separator after `data:`), not all whitespace. When a token is a single space character, `.trim()` collapsed it to an empty string and it was dropped — causing every word to run together in the streamed output. Fixed by using `raw.startsWith(" ") ? raw.slice(1) : raw` instead.
+
+---
+
 ## [0.7.7-beta] — 2026-05-08
 
 ### Changed
