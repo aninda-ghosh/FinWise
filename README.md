@@ -2,7 +2,7 @@
 
 A self-hosted personal finance manager built for people who want full control over their financial data. Track budgets, accounts, investments, and insurance policies — everything runs within your own infrastructure, with no third-party cloud sync.
 
-AI-powered financial chat is included via a locally-running [Ollama](https://ollama.com) model, so your data never leaves your machine.
+AI-powered financial chat is included via [Ollama](https://ollama.com) running as part of the Docker stack, so your data never leaves your machine.
 
 ---
 
@@ -64,19 +64,19 @@ AI-powered financial chat is included via a locally-running [Ollama](https://oll
 | Database | PostgreSQL 16 |
 | Reverse proxy | Nginx — serves frontend, proxies `/api/` to server |
 | Deployment | Docker Compose |
-| AI | Ollama (local LLM, accessed via HTTP) |
+| AI | Ollama (Docker container, local LLM) |
 
 ---
 
 ## Prerequisites
 
-- [Docker](https://docs.docker.com/get-docker/) with Docker Compose
-- [Ollama](https://ollama.com) installed on the host machine (for AI chat)
+- [Docker](https://docs.docker.com/get-docker/) with the Compose plugin
 
 For local development without Docker:
 - Node.js 22+
 - pnpm 10+
 - PostgreSQL 16+
+- [Ollama](https://ollama.com) installed on the host machine
 
 ---
 
@@ -87,19 +87,24 @@ git clone https://github.com/aninda-ghosh/FinWise.git
 cd FinWise
 ```
 
-Generate your secrets and write them to `.env` in one step:
+Generate your secrets and write them to `.env`:
 
 ```bash
 cp .env.example .env
-
 echo "JWT_SECRET=$(openssl rand -hex 32)" >> .env
 echo "POSTGRES_PASSWORD=$(openssl rand -base64 24)" >> .env
 ```
 
-Start all services:
+Deploy (builds images, starts all services, waits for health checks):
 
 ```bash
-docker compose -f docker_compose.yml up -d
+bash deploy.sh
+```
+
+On first deploy, pull the AI model into the Ollama container (≈ 5 GB, one-time):
+
+```bash
+docker exec -it finwise-ollama-1 ollama pull gemma4:e4b
 ```
 
 Open **http://localhost:3002** in your browser. On first visit you will be prompted to create a username and password. JWT tokens expire after 30 days.
@@ -114,7 +119,7 @@ Open **http://localhost:3002** in your browser. On first visit you will be promp
 | `POSTGRES_PASSWORD` | **Yes** | — | PostgreSQL password |
 | `POSTGRES_USER` | No | `finwise` | PostgreSQL username |
 | `POSTGRES_DB` | No | `finwise` | PostgreSQL database name |
-| `OLLAMA_URL` | No | `http://host.docker.internal:11434` | Ollama API endpoint |
+| `OLLAMA_URL` | No | `http://ollama:11434` | Ollama API endpoint (resolved via Docker DNS) |
 | `APP_PORT` | No | `3002` | Host port for the frontend |
 
 Generate a strong `JWT_SECRET`:
@@ -126,19 +131,13 @@ openssl rand -hex 32
 
 ## AI Chat
 
-Finwise connects to a locally-running Ollama instance for the AI chat feature. Install Ollama, then pull a model:
+Ollama runs as a Docker service alongside the app — no host installation needed. After deploying, pull a model into the container once:
 
 ```bash
-ollama pull gemma3
+docker exec -it finwise-ollama-1 ollama pull gemma4:e4b
 ```
 
-**Mac / Windows** — `OLLAMA_URL` defaults to `http://host.docker.internal:11434`, which Docker Desktop resolves automatically.
-
-**Linux** — `host.docker.internal` is not available by default. Set `OLLAMA_URL` to your Docker bridge IP:
-
-```bash
-OLLAMA_URL=http://172.17.0.1:11434
-```
+The model is stored in the `ollama-data` Docker volume and persists across restarts. To switch models, pull a different one and update `OLLAMA_MODEL` in your `.env`.
 
 ---
 

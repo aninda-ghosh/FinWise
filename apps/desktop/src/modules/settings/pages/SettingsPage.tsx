@@ -13,6 +13,25 @@ import { apiFetch, BASE_URL, getToken } from "@/lib/api";
 
 const CHANGELOG: { version: string; date: string; sections: { label: string; items: string[] }[] }[] = [
   {
+    version: "0.7.0-beta",
+    date: "2026-05-08",
+    sections: [
+      {
+        label: "Added",
+        items: [
+          "Ollama runs as a Docker service — no host installation required. Models persist in a named volume.",
+          "deploy.sh — validates required env vars, builds, starts all services, and prints access URLs.",
+        ],
+      },
+      {
+        label: "Changed",
+        items: [
+          "OLLAMA_URL now defaults to http://ollama:11434 (Docker internal DNS) instead of host.docker.internal.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.6.0-beta",
     date: "2026-05-08",
     sections: [

@@ -5,6 +5,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.7.0-beta] — 2026-05-08
+
+### Added
+
+- **Ollama runs as a Docker service.** Ollama is now a first-class service in `docker_compose.yml` using the official `ollama/ollama` image. Models are persisted in an `ollama-data` named volume. The server waits for Ollama to be healthy before starting. No host installation of Ollama is required.
+- **`deploy.sh` script.** Single command to validate the environment, build, and start all services. Checks for required variables (`POSTGRES_PASSWORD`, `JWT_SECRET`), prints defaults for optional ones, streams Docker health-check progress, and prints the local and network URLs when done.
+
+### Changed
+
+- **`OLLAMA_URL` default changed** from `http://host.docker.internal:11434` to `http://ollama:11434` — resolved via Docker's internal DNS instead of a host network bridge.
+
+### Removed
+
+- **`extra_hosts: host.docker.internal:host-gateway`** removed from the server service — no longer needed now that Ollama is a container on the same Docker network.
+
+---
+
 ## [0.6.0-beta] — 2026-05-08
 
 ### Added
