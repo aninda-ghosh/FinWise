@@ -3,6 +3,7 @@
   "short_name": "Finwise",
   "description": "Self-hosted personal finance manager",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#09090b",
