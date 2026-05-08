@@ -181,7 +181,7 @@ export default function ChatPage() {
   const isUnavailable = aiStatus === "unavailable" || aiStatus === "no_model";
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full pb-14 md:pb-0">
       {/* Header */}
       <div className="border-b px-5 py-3 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2.5">

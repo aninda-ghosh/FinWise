@@ -1,7 +1,7 @@
 {
   "name": "finwise-desktop",
   "private": true,
-  "version": "0.3.0-beta",
+  "version": "0.6.0-beta",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -112,7 +112,7 @@ function LinkedAccountSheet({ account, open, onOpenChange, allAccounts }: {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[640px] sm:w-[700px] sm:max-w-none flex flex-col p-0 gap-0">
+      <SheetContent side="right" className="w-full sm:w-[640px] sm:max-w-none flex flex-col p-0 gap-0">
         <SheetHeader className="px-6 pt-5 pb-4 border-b flex-shrink-0 pr-14">
           <SheetTitle className="text-lg">{account.name}</SheetTitle>
           <p className="text-sm text-muted-foreground">
@@ -642,8 +642,8 @@ export default function InvestmentsPage() {
             </p>
           </CardContent>
         ) : (
-          <CardContent className="p-0">
-            <table className="w-full text-sm">
+          <CardContent className="p-0 overflow-x-auto">
+            <table className="w-full text-sm min-w-[400px]">
               <thead>
                 <tr className="bg-muted/50 border-b">
                   <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Account</th>
@@ -726,8 +726,8 @@ export default function InvestmentsPage() {
       ) : !data || data.investments.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground text-sm">No investments yet — add your first one.</div>
       ) : (
-        <div className="rounded-lg border overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="rounded-lg border overflow-x-auto">
+          <table className="w-full text-sm min-w-[600px]">
             <thead>
               <tr className="bg-muted/50 border-b">
                 <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Name</th>

@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { Sidebar } from "@/components/Sidebar";
+import { BottomNav } from "@/components/BottomNav";
 import { LoginGate } from "@/components/LoginGate";
 
 import { queryClient } from "@/lib/query-client";
@@ -59,9 +60,9 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeSync />
       <BrowserRouter>
-        <div className="flex h-screen bg-background text-foreground overflow-hidden">
+        <div className="flex h-[100dvh] bg-background text-foreground overflow-hidden">
           <Sidebar />
-          <main className="flex-1 overflow-y-auto">
+          <main className="flex-1 overflow-y-auto pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0">
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -77,6 +78,7 @@ export default function App() {
               </Routes>
             </Suspense>
           </main>
+          <BottomNav />
         </div>
       </BrowserRouter>
       <Toaster richColors position="top-right" />

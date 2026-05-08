@@ -273,7 +273,7 @@ function AccountTransactionsDialog({ account }: { account: any }) {
         </Card>
       </SheetTrigger>
 
-      <SheetContent side="right" className="w-[680px] sm:w-[740px] sm:max-w-none flex flex-col p-0 gap-0">
+      <SheetContent side="right" className="w-full sm:w-[680px] sm:max-w-none flex flex-col p-0 gap-0">
         <SheetHeader className="px-6 pt-5 pb-4 border-b flex-shrink-0 pr-14">
           <div className="flex items-center gap-3">
             <SheetTitle className="text-lg leading-tight">{account.name}</SheetTitle>
@@ -748,8 +748,8 @@ function BudgetTable({
   };
 
   return (
-    <div className="rounded-lg border overflow-hidden">
-      <table className="w-full text-sm">
+    <div className="rounded-lg border overflow-x-auto">
+      <table className="w-full text-sm min-w-[500px]">
         <thead>
           <tr className="border-b bg-muted/50">
             <th className="text-left px-4 py-2.5 font-medium text-xs text-muted-foreground uppercase tracking-wide">Category</th>
@@ -1289,7 +1289,7 @@ export default function BudgetPage() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Budget</h1>
           {summary && (
@@ -1302,7 +1302,7 @@ export default function BudgetPage() {
             </p>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <MonthSelector />
           <AccountDialog
             title="New Account"

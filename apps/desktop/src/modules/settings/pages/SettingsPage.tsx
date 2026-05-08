@@ -13,6 +13,30 @@ import { apiFetch, BASE_URL, getToken } from "@/lib/api";
 
 const CHANGELOG: { version: string; date: string; sections: { label: string; items: string[] }[] }[] = [
   {
+    version: "0.6.0-beta",
+    date: "2026-05-08",
+    sections: [
+      {
+        label: "Added",
+        items: [
+          "Mobile bottom navigation bar — Dashboard, Budget, Transactions, AI Chat, and a More sheet for the rest. Respects iOS safe-area insets.",
+        ],
+      },
+      {
+        label: "Fixed",
+        items: [
+          "iOS Safari viewport cutoff — switched root layout to dynamic viewport height (100dvh) so content is no longer clipped by the browser chrome.",
+          "Sidebar hidden on mobile — full viewport width given to content on small screens.",
+          "Responsive grids on Dashboard — all stat rows and content grids now collapse to 1–2 columns on mobile.",
+          "Horizontally scrollable tables on mobile — Budget, Transactions, Debt, Investments, and Policies tables no longer overflow the screen.",
+          "Full-width sheets on mobile — account and transaction sheets now fill the screen instead of overflowing.",
+          "Chat and Transactions pages clear the bottom nav — input bar and pagination are no longer hidden behind the navigation bar.",
+          "Server crash when clicking 'Start Ollama' in Docker — unhandled ENOENT spawn error no longer kills the server process.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.5.0-beta",
     date: "2026-05-07",
     sections: [

@@ -62,6 +62,13 @@ aiRouter.post("/start-ollama", async (c) => {
       stdio: "ignore",
       env: spawnEnv,
     });
+
+    // Must attach before unref — without a listener, ENOENT becomes an unhandled
+    // error event that kills the process.
+    child.on("error", (err) => {
+      console.error("[start-ollama] spawn error:", err.message);
+    });
+
     child.unref(); // let it run independently of this process
 
     if (child.pid == null) {

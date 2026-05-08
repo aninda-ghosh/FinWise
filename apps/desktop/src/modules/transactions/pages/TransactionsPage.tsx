@@ -69,7 +69,7 @@ function Filters({
   const hasFilters = !!(filters.account_id || filters.type || filters.date_from || filters.date_to || filters.search);
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2 [&>*]:flex-shrink-0">
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
@@ -171,7 +171,7 @@ export default function TransactionsPage() {
   const end = Math.min(filters.page * filters.limit, total);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full pb-14 md:pb-0">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
         <h1 className="text-xl font-semibold">Transactions</h1>
@@ -186,7 +186,7 @@ export default function TransactionsPage() {
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto overflow-x-auto">
         {isLoading ? (
           <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">
             Loading…

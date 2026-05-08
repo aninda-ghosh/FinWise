@@ -5,6 +5,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.6.0-beta] — 2026-05-08
+
+### Added
+
+- **Mobile bottom navigation.** A fixed bottom tab bar (Dashboard, Budget, Transactions, AI Chat, More) appears on mobile viewports. The "More" sheet surfaces Investments, Debt, Policies, Help & FAQ, and Settings. Fully respects iOS safe-area insets (home indicator / Dynamic Island).
+
+### Fixed
+
+- **iOS Safari viewport cutoff.** Root layout switched from `h-screen` (`100vh`) to `h-[100dvh]` (dynamic viewport height), which excludes the Safari address bar and bottom chrome. Content no longer gets clipped at the bottom on iPhone.
+- **Sidebar hidden on mobile.** The sidebar now uses `hidden md:flex` — on small screens it is completely removed from layout, giving the full width to the main content area.
+- **Responsive grids on Dashboard.** All hardcoded desktop-only grids fixed: stat rows (`grid-cols-4` → `grid-cols-2 md:grid-cols-4`), the main content row (`grid-cols-12` → `grid-cols-1 md:grid-cols-12`), and the bottom row (`grid-cols-3` → `grid-cols-1 md:grid-cols-3`). Net worth card now stacks vertically on mobile. Fixed-width (`w-56`) breakdown bar replaced with `w-full max-w-56`.
+- **Horizontally scrollable tables on mobile.** Budget envelope table, Transactions table, Debt table, Investments portfolio and linked-accounts tables, and Policies table all get `overflow-x-auto` with a `min-width` guard — columns no longer collapse or overflow the screen.
+- **Full-width sheets on mobile.** Account transaction sheets (Budget, Investments) and the Debt transaction history sheet now use `w-full` on small screens instead of a fixed pixel width that exceeded the viewport.
+- **Budget page header wraps on mobile.** Month selector and action buttons (`Add Account`, `Add Transaction`) now use `flex-wrap` so they stack instead of overflowing.
+- **Chat and Transactions pages clear the bottom nav.** Both pages use a fixed-height (`h-full`) flex layout; added `pb-14 md:pb-0` so the chat input bar and transaction pagination are not hidden behind the bottom navigation bar.
+- **Server crash on "Start Ollama" in Docker.** The `/api/ai/start-ollama` endpoint spawned `ollama serve` without attaching an `error` listener to the child process. When `ollama` is not installed (e.g. in a Docker container), Node.js emits an unhandled `error` event that killed the server. An error listener is now attached before `child.unref()`.
+- **`viewport-fit=cover` added to HTML meta tag** so iOS respects safe-area environment variables for the notch and home indicator.
+
+---
+
 ## [0.5.0-beta] — 2026-05-07
 
 ### Added

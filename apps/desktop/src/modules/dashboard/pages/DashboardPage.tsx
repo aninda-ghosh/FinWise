@@ -108,7 +108,7 @@ export default function DashboardPage() {
       {/* ── Row 1: Net Worth hero ─────────────────────────────────────── */}
       <Card>
         <CardContent className="pt-4 pb-4">
-          <div className="flex items-center justify-between gap-6">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-6">
             {/* Left: headline */}
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">Total Net Worth</p>
@@ -118,7 +118,7 @@ export default function DashboardPage() {
               }
               {/* Breakdown bar */}
               {!nwLoading && (accts + invs + pols) > 0 && (
-                <div className="flex h-1 rounded-full overflow-hidden w-56 mt-2 gap-px">
+                <div className="flex h-1 rounded-full overflow-hidden w-full max-w-56 mt-2 gap-px">
                   {(() => {
                     const total = accts + invs + pols;
                     return (
@@ -134,7 +134,7 @@ export default function DashboardPage() {
               )}
             </div>
             {/* Right: breakdown pills */}
-            <div className="flex gap-5 flex-shrink-0 flex-wrap justify-end">
+            <div className="flex gap-4 flex-wrap md:flex-shrink-0 md:justify-end">
               {[
                 { label: "Cash & Accounts", value: accts,  dot: "bg-indigo-500" },
                 { label: "Investments",      value: invs,   dot: "bg-emerald-500" },
@@ -159,7 +159,7 @@ export default function DashboardPage() {
       </Card>
 
       {/* ── Row 2: Wealth breakdown ──────────────────────────────────── */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard title="Cash & Accounts" value={fmt(accts)} sub="On-budget balances"
           icon={Building2} accent="purple" loading={nwLoading} />
         <StatCard title="Investments" value={fmt(invs)} sub="Portfolio + linked accounts"
@@ -171,7 +171,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Row 3: Month KPIs ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard title="Income" value={fmt(income)} sub={monthLabel}
           icon={TrendingUp} accent="green" loading={dashLoading} />
         <StatCard title="Expenses" value={fmt(expenses)} sub={expenses > 0 ? `${savings.toFixed(1)}% saved` : "No expenses"}
@@ -195,10 +195,10 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Row 4: Portfolio + Budget progress + Recent transactions ─── */}
-      <div className="grid grid-cols-12 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
 
         {/* Portfolio Breakdown ── 4 cols */}
-        <Card className="col-span-4">
+        <Card className="md:col-span-4">
           <CardHeader className="pt-3 pb-1"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Portfolio Breakdown</CardTitle></CardHeader>
           <CardContent className="pb-3">
             {donutData.length === 0
@@ -229,7 +229,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Budget progress ── 4 cols */}
-        <Card className="col-span-4">
+        <Card className="md:col-span-4">
           <CardHeader className="pt-3 pb-1"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Budget — {monthLabel}</CardTitle></CardHeader>
           <CardContent className="pb-3 space-y-2">
             {dashLoading
@@ -266,7 +266,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Recent Transactions ── 4 cols */}
-        <Card className="col-span-4">
+        <Card className="md:col-span-4">
           <CardHeader className="pt-3 pb-1"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Top Transactions — {monthLabel}</CardTitle></CardHeader>
           <CardContent className="pb-3">
             {dashLoading
@@ -318,7 +318,7 @@ export default function DashboardPage() {
       </Card>
 
       {/* ── Row 6: Investment Movers + Upcoming Payouts + Upcoming Premiums ── */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
 
         {/* Investment Movers */}
         <Card>

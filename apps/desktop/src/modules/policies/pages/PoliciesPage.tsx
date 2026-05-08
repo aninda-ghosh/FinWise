@@ -385,7 +385,8 @@ export default function PoliciesPage() {
       ) : !data || data.policies.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">No policies yet. Add your first insurance policy.</div>
       ) : (
-        <Table>
+        <div className="overflow-x-auto rounded-lg border">
+        <Table className="min-w-[640px]">
           <TableHeader>
             <TableRow>
               <TableHead>Policy</TableHead>
@@ -417,6 +418,7 @@ export default function PoliciesPage() {
             ))}
           </TableBody>
         </Table>
+        </div>
       )}
     </div>
   );
