@@ -5,6 +5,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.8.0-beta] — 2026-05-09
+
+### Fixed
+
+- **Transfer deletion left envelopes over-charged.** When deleting either leg of a transfer pair, the envelope reversal only checked the single transaction clicked — not both legs. Deleting the "Transfer in" side skipped the reversal entirely because only the "Transfer out" side carries `envelope_id`. Both legs are now fetched before the delete and any envelope charges are reversed regardless of which side triggered the deletion.
+- **Deleting an account left envelopes over-charged.** `deleteAccount` bulk-deleted all transactions for the account without reversing their envelope contributions first. Expense and outgoing-transfer transactions with a category assigned would leave the envelope `spent` counter permanently inflated. The delete now fetches and reverses all such charges before removing the transactions.
+
+### Added
+
+- **Category dropdown in Debt page — Make Payment dialog.** Debt payments can now be tagged with a budget category so the payment is tracked against the correct envelope (e.g. "Car Loan EMI", "Credit Card Payment").
+- **Category dropdown in Investments page — Linked Account transfer tab.** Transfers to/from investment and savings accounts can now be assigned a budget category, charged against the outgoing (budget-account) side of the transfer.
+- **Bi-directional transfer toggle in Budget account sheets.** Every account's transaction sheet now has a "Send from / Deposit into" direction toggle on the Transfer tab, matching what the Investments sheet already had. This lets you record an incoming payment directly from a debt account's own sheet instead of having to navigate to the source account.
+
+---
+
 ## [0.7.8-beta] — 2026-05-08
 
 ### Fixed

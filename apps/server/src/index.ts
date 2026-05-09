@@ -214,6 +214,9 @@ await sql`
   )
 `;
 
+// Incremental column additions
+await sql`ALTER TABLE transactions ADD COLUMN IF NOT EXISTS transfer_pair_id TEXT`;
+
 // Indexes — IF NOT EXISTS is supported in PostgreSQL
 await sql`CREATE INDEX IF NOT EXISTS idx_txn_account ON transactions (account_id)`;
 await sql`CREATE INDEX IF NOT EXISTS idx_txn_date ON transactions (date)`;

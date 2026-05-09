@@ -153,6 +153,7 @@ function AccountTransactionsDialog({ account }: { account: any }) {
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [envelope, setEnvelope] = useState("");
   const [toAccount, setToAccount] = useState("");
+  const [transferDir, setTransferDir] = useState<"out" | "in">("out");
   const [inlineIncomeCategory, setInlineIncomeCategory] = useState<"income" | "cashback" | "starting_balance">("income");
 
   const toAcc = allAccounts.find((a: any) => a.id === toAccount);
@@ -160,17 +161,21 @@ function AccountTransactionsDialog({ account }: { account: any }) {
 
   const resetForm = () => {
     setPayee(""); setAmount(""); setToAmount(""); setDate(new Date().toISOString().slice(0, 10));
-    setEnvelope(""); setToAccount(""); setInlineIncomeCategory("income");
+    setEnvelope(""); setToAccount(""); setInlineIncomeCategory("income"); setTransferDir("out");
   };
 
   const submitTxn = () => {
     if (tab === "transfer") {
       if (!toAccount || !amount) return;
+      const fromId = transferDir === "out" ? account.id : toAccount;
+      const toId = transferDir === "out" ? toAccount : account.id;
+      const fromAmt = parseFloat(amount);
+      const toAmt = sameCurrency ? fromAmt : parseFloat(toAmount || amount);
       createTransfer({
-        from_account_id: account.id,
-        to_account_id: toAccount,
-        amount: parseFloat(amount),
-        to_amount: sameCurrency ? parseFloat(amount) : parseFloat(toAmount || amount),
+        from_account_id: fromId,
+        to_account_id: toId,
+        amount: fromAmt,
+        to_amount: toAmt,
         date,
         notes: payee || undefined,
         envelope_id: envelope || undefined,
@@ -301,10 +306,20 @@ function AccountTransactionsDialog({ account }: { account: any }) {
 
           {tab === "transfer" ? (
             <div className="space-y-2">
+              <div className="flex rounded-md border overflow-hidden text-xs mb-1">
+                <button onClick={() => { setTransferDir("out"); setToAccount(""); setToAmount(""); }}
+                  className={`flex-1 py-1 font-medium transition-colors ${transferDir === "out" ? "bg-foreground text-background" : "hover:bg-muted text-muted-foreground"}`}>
+                  Send from {account.name}
+                </button>
+                <button onClick={() => { setTransferDir("in"); setToAccount(""); setToAmount(""); }}
+                  className={`flex-1 py-1 font-medium transition-colors ${transferDir === "in" ? "bg-foreground text-background" : "hover:bg-muted text-muted-foreground"}`}>
+                  Deposit into {account.name}
+                </button>
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <Label className="text-xs">To account</Label>
-                  <select value={toAccount} onChange={e => setToAccount(e.target.value)} className={`${sel} mt-1 h-8 py-1`}>
+                  <Label className="text-xs">{transferDir === "out" ? "To account" : "From account"}</Label>
+                  <select value={toAccount} onChange={e => { setToAccount(e.target.value); setToAmount(""); }} className={`${sel} mt-1 h-8 py-1`}>
                     <option value="">Select account</option>
                     {allAccounts.filter((a: any) => a.id !== account.id).map((a: any) => (
                       <option key={a.id} value={a.id}>{a.name} ({a.currency})</option>
@@ -318,7 +333,7 @@ function AccountTransactionsDialog({ account }: { account: any }) {
               </div>
               {!sameCurrency && toAcc && (
                 <div>
-                  <Label className="text-xs">Received ({toAcc.currency})</Label>
+                  <Label className="text-xs">{transferDir === "out" ? `Received (${toAcc.currency})` : `Deducted (${toAcc.currency})`}</Label>
                   <Input type="number" value={toAmount} onChange={e => setToAmount(e.target.value)} placeholder="0.00" className="mt-1 h-8 text-sm" />
                 </div>
               )}

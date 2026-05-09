@@ -19,6 +19,7 @@ import {
   useDeleteAccount,
   useTransactions,
   useCreateTransfer,
+  useEnvelopes,
 } from "@/modules/budget/hooks/useBudget";
 
 // ─── Add / Edit Debt Account Dialog ──────────────────────────────────────────
@@ -127,19 +128,43 @@ function PaymentDialog({ debtAccount, budgetAccounts, trigger }: {
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState("");
+  const [envelope, setEnvelope] = useState("");
   const { mutate: createTransfer, isPending } = useCreateTransfer();
+  const { selectedMonth } = useAppStore();
+  const { data: envelopesData } = useEnvelopes(selectedMonth);
 
-  const reset = () => { setFromAccount(""); setAmount(""); setDate(new Date().toISOString().slice(0, 10)); setNotes(""); };
+  const allEnvelopes = (envelopesData as any)?.envelopes ?? [];
+  const envelopesByGroup = (allEnvelopes as any[]).reduce<{ groupId: string; groupName: string; items: any[] }[]>(
+    (acc, env: any) => {
+      const existing = acc.find(g => g.groupId === env.group_id);
+      if (existing) existing.items.push(env);
+      else acc.push({ groupId: env.group_id, groupName: env.group_name ?? "Other", items: [env] });
+      return acc;
+    }, []
+  );
+
+  const sel = "w-full border rounded-md px-3 py-2 text-sm mt-1 bg-background";
+
+  const reset = () => {
+    setFromAccount(""); setAmount(""); setDate(new Date().toISOString().slice(0, 10));
+    setNotes(""); setEnvelope("");
+  };
+
+  const fromAcc = budgetAccounts.find((a: any) => a.id === fromAccount);
+  const sameCurrency = fromAcc?.currency === debtAccount.currency;
 
   const submit = () => {
     if (!fromAccount || !amount) return;
+    const fromAmt = parseFloat(amount);
     createTransfer(
       {
         from_account_id: fromAccount,
         to_account_id: debtAccount.id,
-        amount: parseFloat(amount),
+        amount: fromAmt,
+        to_amount: sameCurrency ? fromAmt : fromAmt,
         date,
         notes: notes.trim() || undefined,
+        envelope_id: envelope || undefined,
       },
       {
         onSuccess: () => { toast.success("Payment recorded"); setOpen(false); reset(); },
@@ -158,7 +183,7 @@ function PaymentDialog({ debtAccount, budgetAccounts, trigger }: {
         <div className="space-y-3 pt-2">
           <div>
             <Label>Pay From</Label>
-            <select value={fromAccount} onChange={e => setFromAccount(e.target.value)} className="w-full border rounded-md px-3 py-2 text-sm mt-1 bg-background">
+            <select value={fromAccount} onChange={e => setFromAccount(e.target.value)} className={sel}>
               <option value="">Select account…</option>
               {budgetAccounts.map((a: any) => (
                 <option key={a.id} value={a.id}>{a.name} ({a.currency})</option>
@@ -169,6 +194,19 @@ function PaymentDialog({ debtAccount, budgetAccounts, trigger }: {
             <Label>Amount ({debtAccount.currency})</Label>
             <Input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" className="mt-1" />
           </div>
+          {envelopesByGroup.length > 0 && (
+            <div>
+              <Label>Category <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <select value={envelope} onChange={e => setEnvelope(e.target.value)} className={sel}>
+                <option value="">None</option>
+                {envelopesByGroup.map(({ groupId, groupName, items }) => (
+                  <optgroup key={groupId} label={groupName}>
+                    {items.map((env: any) => <option key={env.id} value={env.id}>{env.name}</option>)}
+                  </optgroup>
+                ))}
+              </select>
+            </div>
+          )}
           <div>
             <Label>Date</Label>
             <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="mt-1" />

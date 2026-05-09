@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUpDown, Pencil, PlusCircle, RefreshCw, Trash2 } from "lucide-react";
 import { useCreateInvestment, useDeleteInvestment, useInvestments, usePortfolioSummary, useRefreshPrice, useUpdateInvestment } from "../hooks/useInvestments";
-import { useAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount, useTransactions, useDeleteTransaction, useCreateTransaction, useCreateTransfer } from "@/modules/budget/hooks/useBudget";
+import { useAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount, useTransactions, useDeleteTransaction, useCreateTransaction, useCreateTransfer, useEnvelopes } from "@/modules/budget/hooks/useBudget";
 import type { InvestmentResponse } from "@finwise/shared/api-contracts";
 
 const COLORS = ["#6366f1","#22c55e","#f59e0b","#ef4444","#8b5cf6","#06b6d4","#f97316","#84cc16","#ec4899"];
@@ -62,40 +62,58 @@ function LinkedAccountSheet({ account, open, onOpenChange, allAccounts }: {
   const { mutate: deleteTxn } = useDeleteTransaction();
   const { mutate: createTxn, isPending: creating } = useCreateTransaction();
   const { mutate: createTransfer, isPending: transferring } = useCreateTransfer();
-  const { defaultCurrency } = useAppStore();
+  const { defaultCurrency, selectedMonth } = useAppStore();
   const { data: rates = {} } = useExchangeRates();
+  const { data: envelopesData } = useEnvelopes(selectedMonth);
 
   const txns = data?.transactions ?? [];
   const showHint = account.currency !== defaultCurrency;
   const fmtDefault = (inr: number) =>
     formatCurrency(convertFromINR(inr, defaultCurrency as any, rates), defaultCurrency as any);
 
+  const allEnvelopes = (envelopesData as any)?.envelopes ?? [];
+  const envelopesByGroup = (allEnvelopes as any[]).reduce<{ groupId: string; groupName: string; items: any[] }[]>(
+    (acc, env: any) => {
+      const existing = acc.find(g => g.groupId === env.group_id);
+      if (existing) existing.items.push(env);
+      else acc.push({ groupId: env.group_id, groupName: env.group_name ?? "Other", items: [env] });
+      return acc;
+    }, []
+  );
+
   const [tab, setTab] = useState<"income" | "expense" | "transfer">("income");
+  const [transferDir, setTransferDir] = useState<"out" | "in">("out");
   const [payee, setPayee] = useState("");
   const [amount, setAmount] = useState("");
   const [toAccount, setToAccount] = useState("");
   const [toAmount, setToAmount] = useState("");
+  const [envelope, setEnvelope] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
 
   const resetForm = () => {
-    setPayee(""); setAmount(""); setToAccount(""); setToAmount("");
+    setPayee(""); setAmount(""); setToAccount(""); setToAmount(""); setEnvelope("");
     setDate(new Date().toISOString().slice(0, 10));
   };
 
-  const toAcc = allAccounts.find((a: any) => a.id === toAccount);
-  const sameCurrency = toAcc?.currency === account.currency;
+  const otherAcc = allAccounts.find((a: any) => a.id === toAccount);
+  const sameCurrency = otherAcc?.currency === account.currency;
 
   const submitTxn = () => {
     if (tab === "transfer") {
       if (!toAccount || !amount) return;
+      const fromId = transferDir === "out" ? account.id : toAccount;
+      const toId = transferDir === "out" ? toAccount : account.id;
+      const fromAmt = parseFloat(amount);
+      const toAmt = sameCurrency ? fromAmt : parseFloat(toAmount || amount);
       createTransfer(
         {
-          from_account_id: account.id,
-          to_account_id: toAccount,
-          amount: parseFloat(amount),
-          to_amount: sameCurrency ? parseFloat(amount) : parseFloat(toAmount || amount),
+          from_account_id: fromId,
+          to_account_id: toId,
+          amount: fromAmt,
+          to_amount: toAmt,
           date,
           notes: payee || undefined,
+          envelope_id: envelope || undefined,
         },
         { onSuccess: () => { toast.success("Transfer recorded"); resetForm(); }, onError: e => toast.error(e.message) }
       );
@@ -137,9 +155,19 @@ function LinkedAccountSheet({ account, open, onOpenChange, allAccounts }: {
 
           {tab === "transfer" ? (
             <div className="space-y-2">
+              <div className="flex rounded-md border overflow-hidden text-xs mb-1">
+                <button onClick={() => { setTransferDir("out"); setToAccount(""); setToAmount(""); }}
+                  className={`flex-1 py-1 font-medium transition-colors ${transferDir === "out" ? "bg-foreground text-background" : "hover:bg-muted text-muted-foreground"}`}>
+                  Send from {account.name}
+                </button>
+                <button onClick={() => { setTransferDir("in"); setToAccount(""); setToAmount(""); }}
+                  className={`flex-1 py-1 font-medium transition-colors ${transferDir === "in" ? "bg-foreground text-background" : "hover:bg-muted text-muted-foreground"}`}>
+                  Deposit into {account.name}
+                </button>
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <Label className="text-xs">To account</Label>
+                  <Label className="text-xs">{transferDir === "out" ? "To account" : "From account"}</Label>
                   <select value={toAccount} onChange={e => { setToAccount(e.target.value); setToAmount(""); }} className={sel}>
                     <option value="">Select account</option>
                     {allAccounts.filter((a: any) => a.id !== account.id).map((a: any) => (
@@ -152,9 +180,9 @@ function LinkedAccountSheet({ account, open, onOpenChange, allAccounts }: {
                   <Input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" className="mt-1 h-8 text-sm" />
                 </div>
               </div>
-              {!sameCurrency && toAcc && (
+              {!sameCurrency && otherAcc && (
                 <div>
-                  <Label className="text-xs">Received ({toAcc.currency})</Label>
+                  <Label className="text-xs">{transferDir === "out" ? `Received (${otherAcc.currency})` : `Deducted (${otherAcc.currency})`}</Label>
                   <Input type="number" value={toAmount} onChange={e => setToAmount(e.target.value)} placeholder="0.00" className="mt-1 h-8 text-sm" />
                 </div>
               )}
@@ -167,9 +195,22 @@ function LinkedAccountSheet({ account, open, onOpenChange, allAccounts }: {
                   <Label className="text-xs">Date</Label>
                   <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="mt-1 h-8 text-sm" />
                 </div>
+                {envelopesByGroup.length > 0 && (
+                  <div className="col-span-2">
+                    <Label className="text-xs">Category <span className="text-muted-foreground">(optional)</span></Label>
+                    <select value={envelope} onChange={e => setEnvelope(e.target.value)} className={`${sel} col-span-2`}>
+                      <option value="">None</option>
+                      {envelopesByGroup.map(({ groupId, groupName, items }) => (
+                        <optgroup key={groupId} label={groupName}>
+                          {items.map((env: any) => <option key={env.id} value={env.id}>{env.name}</option>)}
+                        </optgroup>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
               <Button className="w-full h-8 text-sm" onClick={submitTxn}
-                disabled={transferring || !toAccount || !amount || (!sameCurrency && !toAmount && !!toAcc)}>
+                disabled={transferring || !toAccount || !amount || (!sameCurrency && !toAmount && !!otherAcc)}>
                 <PlusCircle className="w-3.5 h-3.5 mr-1.5" />Record transfer
               </Button>
             </div>

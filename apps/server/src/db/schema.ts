@@ -59,6 +59,7 @@ export const transactions = pgTable("transactions", {
   notes: text("notes"),
   import_hash: text("import_hash").unique(), // SHA-256 of raw CSV row, nullable
   income_category: text("income_category").$type<"income" | "cashback" | "starting_balance">(),
+  transfer_pair_id: text("transfer_pair_id"),
   created_at: text("created_at").$defaultFn(now),
 });
 

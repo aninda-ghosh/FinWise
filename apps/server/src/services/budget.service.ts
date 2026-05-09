@@ -17,12 +17,14 @@ import type {
   UpdateEnvelopeRequest,
   UpdateTransactionRequest,
 } from "@finwise/shared/api-contracts";
+import { nanoid } from "nanoid";
 import { getDb } from "../db/index";
 import {
   accounts,
   envelope_groups,
   envelopes,
   exchange_rates,
+  recurring_transactions,
   transactions,
 } from "../db/schema";
 
@@ -121,8 +123,12 @@ export async function listAccounts(): Promise<AccountResponse[]> {
 
   return rows.map((r) => {
     const currency = r.currency ?? "INR";
-    // Opening balance + transaction delta — both in native currency
-    const liveNative = (r.balance ?? 0) + (txnDeltaNative[r.id] ?? 0);
+    // Debt accounts (credit/loan) are liabilities — balance must always be negative.
+    // Normalize here so old accounts created with a positive balance still behave correctly.
+    const startBalance = (r.type === "credit" || r.type === "loan")
+      ? -Math.abs(r.balance ?? 0)
+      : (r.balance ?? 0);
+    const liveNative = startBalance + (txnDeltaNative[r.id] ?? 0);
     // Convert live native balance to INR
     const liveInr = toInr(liveNative, currency, rates);
 
@@ -146,10 +152,12 @@ export async function createAccount(data: CreateAccountRequest): Promise<Account
   const db = getDb();
   const rates = await getLatestRates();
 
-  const openingBalance = data.balance ?? 0;
+  const isDebt = data.type === "credit" || data.type === "loan";
+  const openingBalance = isDebt
+    ? -Math.abs(data.balance ?? 0)
+    : (data.balance ?? 0);
   const shouldSeedTransaction =
-    openingBalance > 0 && !data.off_budget &&
-    !["credit", "loan"].includes(data.type as string);
+    openingBalance > 0 && !data.off_budget && !isDebt;
 
   const [row] = await db
     .insert(accounts)
@@ -187,8 +195,22 @@ export async function updateAccount(
 
 export async function deleteAccount(id: string): Promise<void> {
   const db = getDb();
-  const result = await db.delete(accounts).where(eq(accounts.id, id)).returning();
-  if (result.length === 0) throw Object.assign(new Error("Account not found"), { status: 404 });
+  await db.transaction(async (tx) => {
+    // Reverse envelope charges before deleting transactions so envelopes stay accurate.
+    const acctTxns = await tx.select().from(transactions).where(eq(transactions.account_id, id));
+    for (const t of acctTxns) {
+      if (t.envelope_id && (t.type === "expense" || (t.type === "transfer" && t.payee === "Transfer out"))) {
+        await tx.update(envelopes)
+          .set({ spent: sql`${envelopes.spent} - ${t.amount}` })
+          .where(eq(envelopes.id, t.envelope_id));
+      }
+    }
+
+    await tx.delete(recurring_transactions).where(eq(recurring_transactions.account_id, id));
+    await tx.delete(transactions).where(eq(transactions.account_id, id));
+    const result = await tx.delete(accounts).where(eq(accounts.id, id)).returning();
+    if (result.length === 0) throw Object.assign(new Error("Account not found"), { status: 404 });
+  });
 }
 
 // ─── Envelopes ────────────────────────────────────────────────────────────────
@@ -672,14 +694,32 @@ export async function deleteTransaction(id: string): Promise<void> {
       .where(eq(transactions.id, id));
     if (!existing) throw Object.assign(new Error("Transaction not found"), { status: 404 });
 
-    // Reverse spent on the envelope (expense or outgoing transfer)
-    if (existing.envelope_id && (existing.type === "expense" || existing.type === "transfer")) {
-      await tx.update(envelopes)
-        .set({ spent: sql`${envelopes.spent} - ${existing.amount}` })
-        .where(eq(envelopes.id, existing.envelope_id));
-    }
+    if (existing.transfer_pair_id) {
+      // Fetch all legs of the pair so we can reverse whichever side was envelope-charged
+      // (the outgoing leg carries the envelope_id; the incoming leg does not).
+      // Without this, deleting the "Transfer in" leg would skip the reversal entirely.
+      const pairTxns = await tx
+        .select()
+        .from(transactions)
+        .where(eq(transactions.transfer_pair_id, existing.transfer_pair_id));
 
-    await tx.delete(transactions).where(eq(transactions.id, id));
+      for (const t of pairTxns) {
+        if (t.envelope_id) {
+          await tx.update(envelopes)
+            .set({ spent: sql`${envelopes.spent} - ${t.amount}` })
+            .where(eq(envelopes.id, t.envelope_id));
+        }
+      }
+
+      await tx.delete(transactions).where(eq(transactions.transfer_pair_id, existing.transfer_pair_id));
+    } else {
+      if (existing.envelope_id && (existing.type === "expense" || existing.type === "transfer")) {
+        await tx.update(envelopes)
+          .set({ spent: sql`${envelopes.spent} - ${existing.amount}` })
+          .where(eq(envelopes.id, existing.envelope_id));
+      }
+      await tx.delete(transactions).where(eq(transactions.id, id));
+    }
   });
 }
 
@@ -705,6 +745,8 @@ export async function createTransfer(data: {
   }
 
   const result = await db.transaction(async (tx) => {
+    const pairId = nanoid();
+
     const [from] = await tx.insert(transactions).values({
       account_id: data.from_account_id,
       payee: "Transfer out",
@@ -714,6 +756,7 @@ export async function createTransfer(data: {
       notes: data.notes ?? null,
       import_hash: data.import_hash ?? null,
       envelope_id: data.envelope_id ?? null,
+      transfer_pair_id: pairId,
     }).returning();
 
     const [to] = await tx.insert(transactions).values({
@@ -723,6 +766,7 @@ export async function createTransfer(data: {
       type: "transfer",
       date: data.date,
       notes: data.notes ?? null,
+      transfer_pair_id: pairId,
     }).returning();
 
     // Charge the envelope on the outgoing side when provided
