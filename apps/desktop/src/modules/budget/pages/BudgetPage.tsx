@@ -178,7 +178,9 @@ function AccountTransactionsDialog({ account }: { account: any }) {
         to_amount: toAmt,
         date,
         notes: payee || undefined,
-        envelope_id: envelope || undefined,
+        ...(transferDir === "out"
+          ? { envelope_id: envelope || undefined }
+          : { to_envelope_id: envelope || undefined }),
       }, {
         onSuccess: () => { toast.success("Transfer recorded"); resetForm(); },
         onError: e => toast.error(e.message),
@@ -307,11 +309,11 @@ function AccountTransactionsDialog({ account }: { account: any }) {
           {tab === "transfer" ? (
             <div className="space-y-2">
               <div className="flex rounded-md border overflow-hidden text-xs mb-1">
-                <button onClick={() => { setTransferDir("out"); setToAccount(""); setToAmount(""); }}
+                <button onClick={() => { setTransferDir("out"); setToAccount(""); setToAmount(""); setEnvelope(""); }}
                   className={`flex-1 py-1 font-medium transition-colors ${transferDir === "out" ? "bg-foreground text-background" : "hover:bg-muted text-muted-foreground"}`}>
                   Send from {account.name}
                 </button>
-                <button onClick={() => { setTransferDir("in"); setToAccount(""); setToAmount(""); }}
+                <button onClick={() => { setTransferDir("in"); setToAccount(""); setToAmount(""); setEnvelope(""); }}
                   className={`flex-1 py-1 font-medium transition-colors ${transferDir === "in" ? "bg-foreground text-background" : "hover:bg-muted text-muted-foreground"}`}>
                   Deposit into {account.name}
                 </button>
@@ -347,7 +349,10 @@ function AccountTransactionsDialog({ account }: { account: any }) {
                   <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="mt-1 h-8 text-sm" />
                 </div>
                 <div className="col-span-2">
-                  <Label className="text-xs">Category <span className="text-muted-foreground">(optional)</span></Label>
+                  <Label className="text-xs">
+                    {transferDir === "out" ? "Debit envelope" : "Credit envelope"}
+                    {" "}<span className="text-muted-foreground">(optional)</span>
+                  </Label>
                   <select value={envelope} onChange={e => setEnvelope(e.target.value)} className={`${sel} mt-1 h-8 py-1`}>
                     <option value="">None</option>
                     {envelopesByGroup.map(({ groupId, groupName, items }) => (
@@ -707,6 +712,105 @@ function AddCategoryDialog({ onAdd, isPending }: { onAdd: (name: string) => void
   );
 }
 
+type DrillEnvelope = { id: string; name: string; spent: number; budgeted_inr: number };
+
+function EnvelopeTransactionsSheet({
+  envelope, dateFrom, dateTo, fmtBudget, onClose,
+}: {
+  envelope: DrillEnvelope | null;
+  dateFrom: string;
+  dateTo: string;
+  fmtBudget: (n: number) => string;
+  onClose: () => void;
+}) {
+  const { data: txnData } = useTransactions(
+    envelope
+      ? { envelope_id: envelope.id, date_from: dateFrom, date_to: dateTo, limit: 200 }
+      : { envelope_id: "_none_" }
+  );
+  const { data: accountsData } = useAccounts();
+
+  const accountMap = (accountsData?.accounts ?? []).reduce<Record<string, any>>(
+    (acc, a: any) => { acc[a.id] = a; return acc; }, {}
+  );
+  const txns = txnData?.transactions ?? [];
+  const balance = (envelope?.budgeted_inr ?? 0) - (envelope?.spent ?? 0);
+
+  return (
+    <Sheet open={!!envelope} onOpenChange={open => { if (!open) onClose(); }}>
+      <SheetContent side="right" className="w-full sm:w-[520px] sm:max-w-none flex flex-col p-0 gap-0">
+        <SheetHeader className="px-6 pt-5 pb-4 border-b pr-14 flex-shrink-0">
+          <SheetTitle className="text-base leading-tight">{envelope?.name}</SheetTitle>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {dateFrom} — {dateTo}
+          </p>
+          <div className="flex gap-4 text-sm mt-2">
+            <div>
+              <p className="text-xs text-muted-foreground">Budgeted</p>
+              <p className="font-semibold">{fmtBudget(envelope?.budgeted_inr ?? 0)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Net spent</p>
+              <p className={`font-semibold ${(envelope?.spent ?? 0) > 0 ? "text-red-500" : (envelope?.spent ?? 0) < 0 ? "text-green-600 dark:text-green-400" : ""}`}>
+                {(envelope?.spent ?? 0) !== 0 ? fmtBudget(envelope?.spent ?? 0) : "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Balance</p>
+              <p className={`font-semibold ${balance < 0 ? "text-red-500" : balance > 0 ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
+                {fmtBudget(balance)}
+              </p>
+            </div>
+          </div>
+        </SheetHeader>
+
+        <div className="flex-1 overflow-y-auto">
+          {txns.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-16">
+              No transactions for this envelope this month.
+            </p>
+          ) : (
+            <div className="divide-y">
+              {txns.map((t: any) => {
+                const acct = accountMap[t.account_id];
+                const currency = acct?.currency ?? t.currency ?? "INR";
+                const isCredit = t.type === "transfer" && t.payee === "Transfer in";
+                const amountColor = isCredit
+                  ? "text-green-600 dark:text-green-400"
+                  : "text-red-500";
+                const sign = isCredit ? "+" : "−";
+                return (
+                  <div key={t.id} className="px-6 py-3 flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-sm">{t.payee === "Transfer in" || t.payee === "Transfer out" ? (t.notes || t.payee) : t.payee}</span>
+                        <span className={`text-xs px-1.5 py-0.5 rounded-sm font-medium ${
+                          t.type === "expense" ? "bg-red-500/10 text-red-500"
+                          : t.type === "income"  ? "bg-green-500/10 text-green-600"
+                          : "bg-blue-500/10 text-blue-500"
+                        }`}>
+                          {isCredit ? "Transfer in" : t.type === "transfer" ? "Transfer out" : t.type}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
+                        <span>{t.date}</span>
+                        {acct && <><span>·</span><span>{acct.name}</span></>}
+                      </div>
+                    </div>
+                    <span className={`text-sm font-medium tabular-nums flex-shrink-0 ${amountColor}`}>
+                      {sign}{formatCurrency(t.amount, currency)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 function BudgetTable({
   groupedEnvelopes, selectedMonth, groups, fmtBudget,
 }: {
@@ -717,6 +821,7 @@ function BudgetTable({
 }) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [editingBudget, setEditingBudget] = useState<{ envId: string; value: string } | null>(null);
+  const [drillEnvelope, setDrillEnvelope] = useState<DrillEnvelope | null>(null);
 
   const { mutate: createEnvelope, isPending: creatingEnv } = useCreateEnvelope();
   const { mutate: updateEnvelope } = useUpdateEnvelope();
@@ -832,7 +937,12 @@ function BudgetTable({
                   const hasForeignCurrency = env.budget_currency && env.budget_currency !== "INR";
                   return (
                     <tr key={env.id} className="border-t border-border/30 hover:bg-muted/10 group/env transition-colors">
-                      <td className="px-4 py-2 pl-10 text-sm">{env.name}</td>
+                      <td
+                        className="px-4 py-2 pl-10 text-sm cursor-pointer hover:text-primary hover:underline underline-offset-2"
+                        onClick={() => setDrillEnvelope({ id: env.id, name: env.name, spent: env.spent, budgeted_inr: env.budgeted_inr ?? env.budgeted })}
+                      >
+                        {env.name}
+                      </td>
                       <td className="px-4 py-2 text-right tabular-nums">
                         {isEditing ? (
                           <div className="flex items-center justify-end gap-1.5">
@@ -860,8 +970,11 @@ function BudgetTable({
                           </span>
                         )}
                       </td>
-                      <td className={`px-4 py-2 text-right tabular-nums ${env.spent > 0 ? "text-red-500" : "text-muted-foreground"}`}>
-                        {env.spent > 0 ? `−${fmtBudget(env.spent)}` : "—"}
+                      <td
+                        className={`px-4 py-2 text-right tabular-nums cursor-pointer hover:opacity-75 ${env.spent > 0 ? "text-red-500" : env.spent < 0 ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}
+                        onClick={() => setDrillEnvelope({ id: env.id, name: env.name, spent: env.spent, budgeted_inr: env.budgeted_inr ?? env.budgeted })}
+                      >
+                        {env.spent > 0 ? `−${fmtBudget(env.spent)}` : env.spent < 0 ? `+${fmtBudget(Math.abs(env.spent))}` : "—"}
                       </td>
                       <td className={`px-4 py-2 text-right tabular-nums ${balance < 0 ? "text-red-500 font-medium" : balance === 0 ? "text-muted-foreground" : ""}`}>
                         {fmtBudget(balance)}
@@ -959,6 +1072,14 @@ function BudgetTable({
           })}
         </tbody>
       </table>
+
+      <EnvelopeTransactionsSheet
+        envelope={drillEnvelope}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        fmtBudget={fmtBudget}
+        onClose={() => setDrillEnvelope(null)}
+      />
     </div>
   );
 }

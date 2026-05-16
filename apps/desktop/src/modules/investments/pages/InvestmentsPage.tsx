@@ -648,13 +648,17 @@ export default function InvestmentsPage() {
               </PieChart>
             </ResponsiveContainer>
             <div className="space-y-1.5">
-              {donutData.map((d, i) => (
-                <div key={d.name} className="flex items-center gap-2 text-sm">
-                  <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
-                  <span className="text-muted-foreground">{ASSET_LABELS[d.name] ?? d.name}</span>
-                  <span className="font-medium ml-auto pl-4">{fmt(d.value)}</span>
-                </div>
-              ))}
+              {donutData.map((d, i) => {
+                const pct = portfolio.total_inr > 0 ? (d.value / portfolio.total_inr) * 100 : 0;
+                return (
+                  <div key={d.name} className="flex items-center gap-2 text-sm">
+                    <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
+                    <span className="text-muted-foreground">{ASSET_LABELS[d.name] ?? d.name}</span>
+                    <span className="font-medium ml-auto pl-4">{fmt(d.value)}</span>
+                    <span className="text-muted-foreground w-12 text-right">{pct.toFixed(1)}%</span>
+                  </div>
+                );
+              })}
               <div className="border-t pt-1.5 flex justify-between text-sm font-semibold">
                 <span>Total</span>
                 <span>{fmt(portfolio.total_inr)}</span>

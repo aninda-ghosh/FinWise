@@ -232,6 +232,7 @@ budgetRouter.post("/transactions/transfer", async (c) => {
       notes: body.notes,
       import_hash: body.import_hash,
       envelope_id: body.envelope_id,
+      to_envelope_id: body.to_envelope_id,
     });
     if (result === null) return c.json({ skipped: true, reason: "duplicate" }, 409);
     return c.json(result, 201);

@@ -103,7 +103,7 @@ export const budgetApi = {
   deleteTransaction: (id: string) =>
     apiFetch<{ success: boolean }>(`${BASE}/transactions/${id}`, { method: "DELETE" }),
 
-  createTransfer: (data: { from_account_id: string; to_account_id: string; amount: number; to_amount?: number; date: string; notes?: string; envelope_id?: string }) =>
+  createTransfer: (data: { from_account_id: string; to_account_id: string; amount: number; to_amount?: number; date: string; notes?: string; envelope_id?: string; to_envelope_id?: string }) =>
     apiFetch<any>(`${BASE}/transactions/transfer`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

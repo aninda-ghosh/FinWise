@@ -5,6 +5,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.9.0-beta] — 2026-05-16
+
+### Added
+
+- **Envelope transaction drill-down.** Clicking an envelope name or its spent amount in the Budget table opens a side sheet listing every transaction that affected that envelope for the current month. Each row shows the payee (with transfer notes substituted for the generic "Transfer in/out" label), type badge, date, account name, and amount — green for credits, red for debits.
+- **Transfer In credits envelopes.** The envelope balance formula is now `budgeted + transfer_ins − expenses − transfer_outs`. Transfers received into an account can now be assigned a "Credit envelope", which reduces net spent and improves the available balance. All sync points (create, update, delete, account delete, monthly summary) updated with the correct sign logic.
+- **"Debit / Credit envelope" picker on transfers.** The category dropdown on the transfer form now adapts to direction: "Send from" shows **Debit envelope** (charges the envelope), "Deposit into" shows **Credit envelope** (reduces net spent). The picker resets when switching direction. Previously the envelope picker appeared for both directions but always debited, causing accidental charges on incoming transfers.
+- **Portfolio breakdown percentages.** Each row in the Investments → Portfolio Breakdown legend now shows the allocation percentage alongside the dollar amount (e.g. `$50,475  29.9%`).
+
+### Fixed
+
+- **Envelope incorrectly charged by "Deposit into" transfers.** When recording a deposit into an account and selecting an envelope, the charge landed on the outgoing leg of the source account — making the envelope look overspent even though no money left the budget. The envelope picker for the "Deposit into" direction now correctly credits instead of debits.
+
+---
+
 ## [0.8.0-beta] — 2026-05-09
 
 ### Fixed
