@@ -127,6 +127,20 @@ export const price_history = pgTable("price_history", {
   fetched_at: text("fetched_at").$defaultFn(now),
 });
 
+// ─── Investment Value History ─────────────────────────────────────────────────
+
+export const investment_value_history = pgTable("investment_value_history", {
+  id: text("id").primaryKey().$defaultFn(() => nanoid()),
+  investment_id: text("investment_id")
+    .notNull()
+    .references(() => investments.id),
+  previous_value: doublePrecision("previous_value"),
+  new_value: doublePrecision("new_value").notNull(),
+  source: text("source").$type<"manual" | "price_refresh">().notNull(),
+  notes: text("notes"),
+  changed_at: text("changed_at").$defaultFn(now),
+});
+
 // ─── Exchange Rates ───────────────────────────────────────────────────────────
 
 export const exchange_rates = pgTable("exchange_rates", {

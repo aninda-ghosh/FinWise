@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUpDown, Pencil, PlusCircle, RefreshCw, Trash2 } from "lucide-react";
-import { useCreateInvestment, useDeleteInvestment, useInvestments, usePortfolioSummary, useRefreshPrice, useUpdateInvestment } from "../hooks/useInvestments";
+import { useCreateInvestment, useDeleteInvestment, useInvestments, usePortfolioSummary, useRefreshPrice, useUpdateInvestment, useValueHistory } from "../hooks/useInvestments";
 import { useAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount, useTransactions, useDeleteTransaction, useCreateTransaction, useCreateTransfer, useEnvelopes } from "@/modules/budget/hooks/useBudget";
 import type { InvestmentResponse } from "@finwise/shared/api-contracts";
 
@@ -585,6 +585,125 @@ function InvestmentFormDialog({
   );
 }
 
+// ─── Investment History Sheet ─────────────────────────────────────────────────
+
+function InvestmentHistorySheet({
+  inv, open, onOpenChange, fmt,
+}: {
+  inv: InvestmentResponse | null;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  fmt: (inr: number) => string;
+}) {
+  const { data: historyData, isLoading } = useValueHistory(inv?.id ?? null);
+  const history = historyData?.history ?? [];
+
+  const fmtNative = (v: number) =>
+    inv ? formatCurrency(v, inv.currency as any) : String(v);
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-full sm:w-[480px] sm:max-w-none flex flex-col p-0 gap-0">
+        <SheetHeader className="px-6 pt-5 pb-4 border-b pr-14 flex-shrink-0">
+          <SheetTitle className="text-base leading-tight truncate">{inv?.name}</SheetTitle>
+          <div className="flex gap-1 mt-1 flex-wrap">
+            <Badge variant="secondary" className="text-xs">
+              {ASSET_LABELS[inv?.asset_type ?? ""] ?? inv?.asset_type}
+            </Badge>
+            <Badge variant="outline" className="text-xs">{inv?.currency}</Badge>
+          </div>
+          <div className="grid grid-cols-3 gap-3 mt-3 text-sm">
+            <div>
+              <p className="text-xs text-muted-foreground">Purchase</p>
+              <p className="font-semibold">{inv ? fmtNative(inv.purchase_value) : "—"}</p>
+              <p className="text-xs text-muted-foreground">{inv?.purchase_date}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Current</p>
+              <p className="font-semibold">{inv ? fmtNative(inv.current_value) : "—"}</p>
+              {inv?.current_value_at && (
+                <p className="text-xs text-muted-foreground">
+                  {new Date(inv.current_value_at).toLocaleDateString()}
+                </p>
+              )}
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Gain / Loss</p>
+              <p className={`font-semibold ${(inv?.gain_loss_inr ?? 0) >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500"}`}>
+                {inv ? fmt(inv.gain_loss_inr) : "—"}
+              </p>
+              <p className={`text-xs ${(inv?.gain_loss_pct ?? 0) >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500"}`}>
+                {inv ? `${inv.gain_loss_pct >= 0 ? "+" : ""}${inv.gain_loss_pct.toFixed(2)}%` : ""}
+              </p>
+            </div>
+          </div>
+        </SheetHeader>
+
+        <div className="flex-1 overflow-y-auto">
+          <p className="px-6 pt-4 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Value History
+          </p>
+          {isLoading ? (
+            <div className="px-6 space-y-3 pt-2">
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-12 w-full" />)}
+            </div>
+          ) : history.length === 0 ? (
+            <p className="px-6 py-8 text-sm text-muted-foreground text-center">
+              No history yet — edits and price refreshes will appear here.
+            </p>
+          ) : (
+            <div className="divide-y">
+              {history.map((entry, idx) => {
+                const delta = entry.previous_value !== null
+                  ? entry.new_value - entry.previous_value
+                  : null;
+                const isUp = delta !== null && delta >= 0;
+                return (
+                  <div key={entry.id} className="px-6 py-3 flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs px-1.5 py-0.5 rounded-sm font-medium ${
+                          entry.source === "manual"
+                            ? "bg-blue-500/10 text-blue-500"
+                            : "bg-violet-500/10 text-violet-500"
+                        }`}>
+                          {entry.source === "manual" ? "Manual edit" : "Auto refresh"}
+                        </span>
+                        {idx === 0 && (
+                          <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded-sm">latest</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(entry.changed_at).toLocaleString()}
+                      </p>
+                      {entry.previous_value !== null && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {fmtNative(entry.previous_value)} → {fmtNative(entry.new_value)}
+                        </p>
+                      )}
+                      {entry.notes && entry.source === "manual" && (
+                        <p className="text-xs text-muted-foreground mt-0.5 italic truncate">{entry.notes}</p>
+                      )}
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-sm font-medium">{fmtNative(entry.new_value)}</p>
+                      {delta !== null && (
+                        <p className={`text-xs font-medium ${isUp ? "text-green-600 dark:text-green-400" : "text-red-500"}`}>
+                          {isUp ? "+" : ""}{fmtNative(delta)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function InvestmentsPage() {
@@ -595,6 +714,7 @@ export default function InvestmentsPage() {
   const { mutate: createInv, isPending: creating } = useCreateInvestment();
   const { mutate: updateInv, isPending: updating } = useUpdateInvestment();
   const [refreshingId, setRefreshingId] = useState<string | null>(null);
+  const [selectedInv, setSelectedInv] = useState<InvestmentResponse | null>(null);
   const { data: accountsData } = useAccounts();
   const { mutate: deleteAccount } = useDeleteAccount();
   const [sheetAccount, setSheetAccount] = useState<any | null>(null);
@@ -785,7 +905,11 @@ export default function InvestmentsPage() {
             </thead>
             <tbody className="divide-y">
               {data.investments.map(inv => (
-                <tr key={inv.id} className="hover:bg-muted/20 transition-colors">
+                <tr
+                  key={inv.id}
+                  className="hover:bg-muted/20 transition-colors cursor-pointer"
+                  onClick={() => setSelectedInv(inv)}
+                >
                   <td className="px-4 py-3">
                     <div className="font-medium">{inv.name}</div>
                     {inv.units && (
@@ -820,7 +944,7 @@ export default function InvestmentsPage() {
                   <td className="px-4 py-3">
                     <GainLossCell inv={inv} fmt={fmt} />
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                     <div className="flex gap-1 justify-end">
                       <InvestmentFormDialog
                         title="Edit Investment"
@@ -877,6 +1001,13 @@ export default function InvestmentsPage() {
           </table>
         </div>
       )}
+
+      <InvestmentHistorySheet
+        inv={selectedInv}
+        open={!!selectedInv}
+        onOpenChange={open => { if (!open) setSelectedInv(null); }}
+        fmt={fmt}
+      />
     </div>
   );
 }

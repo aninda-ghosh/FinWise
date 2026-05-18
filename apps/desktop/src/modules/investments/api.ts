@@ -34,6 +34,8 @@ export const investmentsApi = {
     apiFetch<{ price: number; source_url: string; fetched_at: string }>(`${BASE}/${id}/refresh-price`, { method: "POST" }),
   getPriceHistory: (id: string) =>
     apiFetch<PriceHistoryResponse>(`${BASE}/${id}/price-history`),
+  getValueHistory: (id: string) =>
+    apiFetch<{ history: { id: string; previous_value: number | null; new_value: number; source: "manual" | "price_refresh"; notes: string | null; changed_at: string }[] }>(`${BASE}/${id}/value-history`),
   getPortfolioSummary: () =>
     apiFetch<{ total_inr: number; by_asset_type: Record<string, number> }>(`${BASE}/portfolio-summary`),
 };

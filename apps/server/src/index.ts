@@ -139,6 +139,18 @@ await sql`
   )
 `;
 await sql`
+  CREATE TABLE IF NOT EXISTS investment_value_history (
+    id TEXT PRIMARY KEY NOT NULL,
+    investment_id TEXT NOT NULL,
+    previous_value DOUBLE PRECISION,
+    new_value DOUBLE PRECISION NOT NULL,
+    source TEXT NOT NULL,
+    notes TEXT,
+    changed_at TEXT,
+    FOREIGN KEY (investment_id) REFERENCES investments(id)
+  )
+`;
+await sql`
   CREATE TABLE IF NOT EXISTS policies (
     id TEXT PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,

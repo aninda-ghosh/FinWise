@@ -77,6 +77,15 @@ investmentsRouter.get("/:id/price-history", async (c) => {
   }
 });
 
+investmentsRouter.get("/:id/value-history", async (c) => {
+  try {
+    const history = await investmentService.getValueHistory(c.req.param("id"));
+    return c.json({ history });
+  } catch (err) {
+    return handleError(c, err);
+  }
+});
+
 investmentsRouter.get("/portfolio-summary", async (c) => {
   try {
     const summary = await investmentService.getPortfolioSummary();

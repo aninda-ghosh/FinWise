@@ -21,7 +21,10 @@ export function useRefreshPrice() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: investmentsApi.refreshPrice,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["investments"] }),
+    onSuccess: (_, id) => {
+      qc.invalidateQueries({ queryKey: ["investments"] });
+      qc.invalidateQueries({ queryKey: ["value-history", id] });
+    },
   });
 }
 
@@ -29,7 +32,11 @@ export function useUpdateInvestment() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => investmentsApi.updateInvestment(id, data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["investments"] }); qc.invalidateQueries({ queryKey: ["portfolio-summary"] }); },
+    onSuccess: (_, { id }) => {
+      qc.invalidateQueries({ queryKey: ["investments"] });
+      qc.invalidateQueries({ queryKey: ["portfolio-summary"] });
+      qc.invalidateQueries({ queryKey: ["value-history", id] });
+    },
   });
 }
 
@@ -38,5 +45,13 @@ export function useDeleteInvestment() {
   return useMutation({
     mutationFn: investmentsApi.deleteInvestment,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["investments"] }),
+  });
+}
+
+export function useValueHistory(id: string | null) {
+  return useQuery({
+    queryKey: ["value-history", id],
+    queryFn: () => investmentsApi.getValueHistory(id!),
+    enabled: !!id,
   });
 }

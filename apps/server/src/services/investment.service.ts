@@ -6,7 +6,7 @@ import type {
   UpdateInvestmentRequest,
 } from "@finwise/shared/api-contracts";
 import { getDb } from "../db/index";
-import { investments, price_history } from "../db/schema";
+import { investments, price_history, investment_value_history } from "../db/schema";
 import { getLatestRates } from "./exchange-rate.service";
 import { fetchCurrentPrice } from "./price.service";
 import { listAccounts } from "./budget.service";
@@ -86,18 +86,33 @@ export async function updateInvestment(
 ): Promise<InvestmentResponse> {
   const db = getDb();
   const rates = await getLatestRates();
+
+  const [existing] = await db.select().from(investments).where(eq(investments.id, id));
+  if (!existing) throw Object.assign(new Error("Investment not found"), { status: 404 });
+
   const [row] = await db
     .update(investments)
     .set({ ...data, updated_at: new Date().toISOString() })
     .where(eq(investments.id, id))
     .returning();
-  if (!row) throw Object.assign(new Error("Investment not found"), { status: 404 });
+
+  if (data.current_value !== undefined && data.current_value !== existing.current_value) {
+    await db.insert(investment_value_history).values({
+      investment_id: id,
+      previous_value: existing.current_value,
+      new_value: data.current_value,
+      source: "manual",
+      notes: data.notes ?? null,
+    });
+  }
+
   return toInvestmentResponse(row, rates);
 }
 
 export async function deleteInvestment(id: string): Promise<void> {
   const db = getDb();
   await db.delete(price_history).where(eq(price_history.investment_id, id));
+  await db.delete(investment_value_history).where(eq(investment_value_history.investment_id, id));
   const result = await db.delete(investments).where(eq(investments.id, id)).returning();
   if (result.length === 0) throw Object.assign(new Error("Investment not found"), { status: 404 });
 }
@@ -144,11 +159,20 @@ export async function refreshPrice(
     );
   }
 
-  // price_history is append-only (constraint 9)
+  // price_history is append-only
   await db.insert(price_history).values({
     investment_id: id,
     price: result.price,
     source_url: result.source_url,
+  });
+
+  // Record value change in history
+  await db.insert(investment_value_history).values({
+    investment_id: id,
+    previous_value: inv.current_value,
+    new_value: result.price,
+    source: "price_refresh",
+    notes: result.source_url ?? null,
   });
 
   // Update current_value in native currency
@@ -195,6 +219,23 @@ export async function getPriceHistory(
       source_url: r.source_url ?? null,
       fetched_at: r.fetched_at ?? "",
     }));
+}
+
+export async function getValueHistory(id: string) {
+  const db = getDb();
+  const rows = await db
+    .select()
+    .from(investment_value_history)
+    .where(eq(investment_value_history.investment_id, id))
+    .orderBy(desc(investment_value_history.changed_at));
+  return rows.map(r => ({
+    id: r.id,
+    previous_value: r.previous_value ?? null,
+    new_value: r.new_value,
+    source: r.source as "manual" | "price_refresh",
+    notes: r.notes ?? null,
+    changed_at: r.changed_at ?? "",
+  }));
 }
 
 export async function getPortfolioSummary() {
